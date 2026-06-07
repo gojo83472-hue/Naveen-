@@ -31,6 +31,10 @@ enum class MatchMode {
     TEXT, VIDEO
 }
 
+enum class PaymentMethod {
+    UPI, PAYPAL, CARD
+}
+
 class UskhaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: UskhaRepository
@@ -74,7 +78,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
     val isStrangerMuted = _isStrangerMuted.asStateFlow()
 
     // Custom Payments & UPI states
-    private val _selectedPayAmount = MutableStateFlow(30) // 30 RS standard starter pack, up to 2500 RS
+    private val _selectedPayAmount = MutableStateFlow(9) // Special starter promo pack 9 RS by default, up to 2500 RS
     val selectedPayAmount = _selectedPayAmount.asStateFlow()
 
     private val _enteredUtr = MutableStateFlow("")
@@ -88,6 +92,22 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _paymentError = MutableStateFlow<String?>(null)
     val paymentError = _paymentError.asStateFlow()
+
+    // Interactive PayPal & Card Payment Modes
+    private val _selectedPaymentMethod = MutableStateFlow(PaymentMethod.UPI)
+    val selectedPaymentMethod = _selectedPaymentMethod.asStateFlow()
+
+    private val _paypalEmail = MutableStateFlow("")
+    val paypalEmail = _paypalEmail.asStateFlow()
+
+    private val _cardNumber = MutableStateFlow("")
+    val cardNumber = _cardNumber.asStateFlow()
+
+    private val _cardExpiry = MutableStateFlow("")
+    val cardExpiry = _cardExpiry.asStateFlow()
+
+    private val _cardCvv = MutableStateFlow("")
+    val cardCvv = _cardCvv.asStateFlow()
 
     // Custom settings states
     private val _isDarkTheme = MutableStateFlow(true)
@@ -104,6 +124,61 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _audioVideoQuality = MutableStateFlow("Perfect HD Stereo") // "Perfect HD Stereo", "Ultra Crisp Voice", "Standard Eco"
     val audioVideoQuality = _audioVideoQuality.asStateFlow()
+
+    // --- Online & India Network Monitoring States ---
+    private val _isOnline = MutableStateFlow(true)
+    val isOnline = _isOnline.asStateFlow()
+
+    private val _isIndiaNetwork = MutableStateFlow(true)
+    val isIndiaNetwork = _isIndiaNetwork.asStateFlow()
+
+    private val _telephonyOperatorName = MutableStateFlow("carrier")
+    val telephonyOperatorName = _telephonyOperatorName.asStateFlow()
+
+    private val _isMockingIndiaNetwork = MutableStateFlow(false)
+    val isMockingIndiaNetwork = _isMockingIndiaNetwork.asStateFlow()
+
+    fun performNetworkCheck() {
+        val context = getApplication<Application>().applicationContext
+        val connectivityManager = context.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+        val activeNetwork = connectivityManager?.activeNetwork
+        val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
+        val online = capabilities != null && (
+                capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET)
+        )
+        _isOnline.value = online
+
+        val telephonyManager = context.getSystemService(android.content.Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
+        val networkIso = telephonyManager?.networkCountryIso?.lowercase() ?: ""
+        val simIso = telephonyManager?.simCountryIso?.lowercase() ?: ""
+        val localeCountry = java.util.Locale.getDefault().country?.lowercase() ?: ""
+
+        val isEmulator = android.os.Build.FINGERPRINT.startsWith("generic") ||
+                android.os.Build.MODEL.contains("google_sdk") ||
+                android.os.Build.HARDWARE.contains("goldfish") ||
+                android.os.Build.HARDWARE.contains("ranchu") ||
+                android.os.Build.PRODUCT.contains("sdk_gphone")
+
+        val belongsToIndia = networkIso == "in" || simIso == "in" || localeCountry == "in" || isEmulator
+
+        val operatorName = if (isEmulator) {
+            "Simulated India LTE (Jio/Airtel)"
+        } else {
+            val opName = telephonyManager?.networkOperatorName
+            if (!opName.isNullOrEmpty()) opName else "Airtel / Jio India Network"
+        }
+
+        _telephonyOperatorName.value = operatorName
+        _isIndiaNetwork.value = belongsToIndia || _isMockingIndiaNetwork.value
+    }
+
+    fun setMockIndiaNetwork(mock: Boolean) {
+        _isMockingIndiaNetwork.value = mock
+        _isIndiaNetwork.value = true
+        _telephonyOperatorName.value = "Airtel India LTE (Simulated)"
+    }
 
     fun setDarkTheme(enabled: Boolean) {
         _isDarkTheme.value = enabled
@@ -319,6 +394,18 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
                 _currentScreen.value = UskhaScreen.AgeGate
             }
         }
+
+        // Start continuous background network checks
+        viewModelScope.launch {
+            while (true) {
+                try {
+                    performNetworkCheck()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                delay(3000)
+            }
+        }
     }
 
     fun navigateTo(screen: UskhaScreen) {
@@ -369,7 +456,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
         val currentCoins = prefs.walletCoins
         if (currentCoins < requiredCoins) {
             // Redirect to pay
-            _selectedPayAmount.value = 30
+            _selectedPayAmount.value = 9
             _currentScreen.value = UskhaScreen.PremiumHub
             return
         }
@@ -390,7 +477,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
                 if (filter == "Girl" && !prefs.premiumSubscribed && !prefs.girlVideoUnlocked) {
                     // Redirect to pay
                     _isSearching.value = false
-                    _selectedPayAmount.value = 30
+                    _selectedPayAmount.value = 9
                     _currentScreen.value = UskhaScreen.PremiumHub
                     return@launch
                 }
@@ -404,7 +491,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
                     completeMatch(mode)
                 } else {
                     _isSearching.value = false
-                    _selectedPayAmount.value = 30
+                    _selectedPayAmount.value = 9
                     _currentScreen.value = UskhaScreen.PremiumHub
                 }
             }
@@ -562,11 +649,21 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * UPI payments processor
+     * Interactive Payments processors (UPI, PayPal, Credit Card)
      */
+    fun selectPaymentMethod(method: PaymentMethod) {
+        _selectedPaymentMethod.value = method
+        _paymentError.value = null
+        _paymentVerifiedSuccessfully.value = false
+    }
+
     fun updatePayAmount(amount: Int) {
         _selectedPayAmount.value = amount
         _enteredUtr.value = ""
+        _paypalEmail.value = ""
+        _cardNumber.value = ""
+        _cardExpiry.value = ""
+        _cardCvv.value = ""
         _paymentVerifiedSuccessfully.value = false
         _paymentError.value = null
     }
@@ -575,15 +672,47 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
         _enteredUtr.value = newValue
     }
 
+    fun updatePaypalEmail(newValue: String) {
+        _paypalEmail.value = newValue
+    }
+
+    fun updateCardDetails(number: String, expiry: String, cvv: String) {
+        _cardNumber.value = number
+        _cardExpiry.value = expiry
+        _cardCvv.value = cvv
+    }
+
     fun submitSimulatedPaymentReceipt() {
-        val utr = _enteredUtr.value.trim()
-        if (utr.length < 6) {
-            _paymentError.value = "Please enter a valid 12-digit UPI transaction ID or reference code."
-            return
+        val method = _selectedPaymentMethod.value
+        _paymentError.value = null
+
+        when (method) {
+            PaymentMethod.UPI -> {
+                val utr = _enteredUtr.value.trim()
+                if (utr.length < 6) {
+                    _paymentError.value = "Please enter a valid 12-digit UPI transaction ID or reference code."
+                    return
+                }
+            }
+            PaymentMethod.PAYPAL -> {
+                val email = _paypalEmail.value.trim()
+                if (!email.contains("@") || !email.contains(".")) {
+                    _paymentError.value = "Please enter a valid PayPal email address to authorize."
+                    return
+                }
+            }
+            PaymentMethod.CARD -> {
+                val num = _cardNumber.value.replace(" ", "")
+                val exp = _cardExpiry.value.trim()
+                val cvv = _cardCvv.value.trim()
+                if (num.length < 12 || exp.length < 5 || cvv.length != 3) {
+                    _paymentError.value = "Please complete Card details: Number (12-16-digit), Expiry (MM/YY) and CVV (3-digit)."
+                    return
+                }
+            }
         }
 
         _isPaymentProcessing.value = true
-        _paymentError.value = null
 
         viewModelScope.launch {
             // Realistic payment clearing simulated delay
@@ -592,30 +721,39 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
             _isPaymentProcessing.value = false
             _paymentVerifiedSuccessfully.value = true
 
-            // Update user status persist in Room DB
+            // Update user status and persist in Room DB
             val amount = _selectedPayAmount.value
             val current = repository.getUserPreferencesDirect()
             
-            if (amount == 30) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, walletCoins = current.walletCoins + 70))
-            } else if (amount == 100) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 233))
-            } else if (amount == 250) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 585))
-            } else if (amount == 500) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 1170))
-            } else if (amount == 1000) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 2350))
-            } else if (amount == 2500) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 6000))
-            } else {
-                repository.saveUserPreferences(current.copy(walletCoins = current.walletCoins + 70))
+            val updatedCoins = when (amount) {
+                9 -> current.walletCoins + 25
+                30 -> current.walletCoins + 70
+                100 -> current.walletCoins + 233
+                250 -> current.walletCoins + 585
+                500 -> current.walletCoins + 1170
+                1000 -> current.walletCoins + 2350
+                2500 -> current.walletCoins + 6000
+                else -> current.walletCoins + 25
             }
+
+            // High priority unlocks based on premium criteria
+            val girlUnlock = amount >= 100
+            repository.saveUserPreferences(
+                current.copy(
+                    premiumSubscribed = true,
+                    girlVideoUnlocked = current.girlVideoUnlocked || girlUnlock,
+                    walletCoins = updatedCoins
+                )
+            )
         }
     }
 
     fun closePaymentScreen() {
         _enteredUtr.value = ""
+        _paypalEmail.value = ""
+        _cardNumber.value = ""
+        _cardExpiry.value = ""
+        _cardCvv.value = ""
         _paymentVerifiedSuccessfully.value = false
         _paymentError.value = null
         _currentScreen.value = UskhaScreen.Dashboard

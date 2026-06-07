@@ -56,8 +56,10 @@ import com.example.data.model.ModerationReport
 import com.example.data.model.UserPreferences
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MatchMode
+import com.example.ui.viewmodel.PaymentMethod
 import com.example.ui.viewmodel.UskhaScreen
 import com.example.ui.viewmodel.UskhaViewModel
+import androidx.compose.ui.graphics.SolidColor
 import kotlinx.coroutines.delay
 
 /**
@@ -68,6 +70,8 @@ import kotlinx.coroutines.delay
 fun UskhaMainApp(viewModel: UskhaViewModel) {
     val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
     val prefs by viewModel.userPrefs.collectAsStateWithLifecycle()
+    val isOnline by viewModel.isOnline.collectAsStateWithLifecycle()
+    val isIndiaNetwork by viewModel.isIndiaNetwork.collectAsStateWithLifecycle()
 
     BoxWithConstraints(
         modifier = Modifier
@@ -125,24 +129,286 @@ fun UskhaMainApp(viewModel: UskhaViewModel) {
                     }
                 )
         ) {
-            AnimatedContent(
-                targetState = currentScreen,
-                transitionSpec = {
-                    fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) togetherWith
-                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow))
-                },
-                label = "ScreenTransition"
-            ) { screen ->
-                when (screen) {
-                    is UskhaScreen.AgeGate -> AgeGateScreen(viewModel = viewModel, onConfirm = { viewModel.verifyAge(it) })
-                    is UskhaScreen.Dashboard -> DashboardScreen(viewModel = viewModel, prefs = prefs)
-                    is UskhaScreen.Matching -> MatchingScreen(viewModel = viewModel)
-                    is UskhaScreen.TextChat -> TextChatScreen(viewModel = viewModel)
-                    is UskhaScreen.VideoChat -> VideoChatScreen(viewModel = viewModel)
-                    is UskhaScreen.PremiumHub -> PremiumHubScreen(viewModel = viewModel, prefs = prefs)
-                    is UskhaScreen.SafetyCenter -> SafetyCenterScreen(viewModel = viewModel)
-                    is UskhaScreen.Settings -> SettingsScreen(viewModel = viewModel)
+            if (!isOnline || !isIndiaNetwork) {
+                GatewayBlockerScreen(viewModel = viewModel)
+            } else {
+                AnimatedContent(
+                    targetState = currentScreen,
+                    transitionSpec = {
+                        fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)) togetherWith
+                                fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow))
+                    },
+                    label = "ScreenTransition"
+                ) { screen ->
+                    when (screen) {
+                        is UskhaScreen.AgeGate -> AgeGateScreen(viewModel = viewModel, onConfirm = { viewModel.verifyAge(it) })
+                        is UskhaScreen.Dashboard -> DashboardScreen(viewModel = viewModel, prefs = prefs)
+                        is UskhaScreen.Matching -> MatchingScreen(viewModel = viewModel)
+                        is UskhaScreen.TextChat -> TextChatScreen(viewModel = viewModel)
+                        is UskhaScreen.VideoChat -> VideoChatScreen(viewModel = viewModel)
+                        is UskhaScreen.PremiumHub -> PremiumHubScreen(viewModel = viewModel, prefs = prefs)
+                        is UskhaScreen.SafetyCenter -> SafetyCenterScreen(viewModel = viewModel)
+                        is UskhaScreen.Settings -> SettingsScreen(viewModel = viewModel)
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun GatewayBlockerScreen(viewModel: UskhaViewModel) {
+    val isOnline by viewModel.isOnline.collectAsStateWithLifecycle()
+    val isIndiaNetwork by viewModel.isIndiaNetwork.collectAsStateWithLifecycle()
+    val operatorName by viewModel.telephonyOperatorName.collectAsStateWithLifecycle()
+    val isMocking by viewModel.isMockingIndiaNetwork.collectAsStateWithLifecycle()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ObsidianBlack)
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // High-Security Radar Scanner
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(100.dp)
+        ) {
+            var scale by remember { mutableStateOf(1f) }
+            LaunchedEffect(Unit) {
+                while (true) {
+                    scale = 1.3f
+                    delay(1200)
+                    scale = 1f
+                    delay(1200)
+                }
+            }
+            val pulseScale by animateFloatAsState(
+                targetValue = scale,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1200, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "PulseRadar"
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .graphicsLayer(scaleX = pulseScale, scaleY = pulseScale)
+                    .clip(CircleShape)
+                    .background(if (isOnline && isIndiaNetwork) AccentTeal.copy(alpha = 0.15f) else NeonPink.copy(alpha = 0.15f))
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(CircleShape)
+                    .background(if (isOnline && isIndiaNetwork) AccentTeal else NeonPink),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isOnline && isIndiaNetwork) Icons.Default.Lock else Icons.Default.WifiOff,
+                    contentDescription = "Shield Security Node",
+                    tint = ObsidianBlack,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "USKHA SECURE ENHANCED GATEWAY",
+            color = if (isOnline && isIndiaNetwork) NeonCyan else NeonPink,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 2.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "India Network Validation",
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Black,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "To protect user security, filter latency, and enable end-to-end encrypted chats/video calls, the Uskha app requires an active broadband or cell link registered to supported Indian telecommunication carriers.",
+            color = TextSecondary,
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 18.sp,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Live Telemetry diagnostics panel
+        Card(
+            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+            border = BorderStroke(1.dp, GridBorder),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = "DIAGNOSTIC SYSTEM TELEMETRY",
+                    color = Color.Gray,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+
+                // 1. Connection check
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isOnline) Icons.Default.CheckCircle else Icons.Default.Cancel,
+                            tint = if (isOnline) AccentTeal else NeonPink,
+                            contentDescription = "Online",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Active Broadband Data", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Text(
+                        text = if (isOnline) "Connected" else "Disconnected",
+                        color = if (isOnline) AccentTeal else NeonPink,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // 2. India Carrier check
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isIndiaNetwork) Icons.Default.CheckCircle else Icons.Default.Cancel,
+                            tint = if (isIndiaNetwork) AccentTeal else NeonPink,
+                            contentDescription = "India Carrier",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Registered Indian SIM Location", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Text(
+                        text = if (isIndiaNetwork) "Verified" else "Outside India",
+                        color = if (isIndiaNetwork) AccentTeal else NeonPink,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // 3. active carrier parameter display
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(GridBorder)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Carrier Operator IP Name", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = operatorName,
+                        color = NeonCyan,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Direct System retry trigger button with CDMA feedback sounds
+        Button(
+            onClick = {
+                try {
+                    val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                    toneG.startTone(android.media.ToneGenerator.TONE_CDMA_PIP, 60)
+                } catch (e: Exception) {}
+                viewModel.performNetworkCheck()
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = ObsidianBlack),
+            border = BorderStroke(1.5.dp, Brush.horizontalGradient(listOf(NeonCyan, AccentTeal))),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+        ) {
+            Icon(Icons.Default.Refresh, contentDescription = "Retry Link", tint = NeonCyan)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Re-validate System Handshake", color = Color.White, fontWeight = FontWeight.Black)
+        }
+
+        // Gorgeous Emulator / Sandbox sandbox bypass toggle container
+        Spacer(modifier = Modifier.height(20.dp))
+        Card(
+            colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+            border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.2f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 2.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "SANDBOX DEVELOPER MODE BYPASS",
+                        color = NeonCyan,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Simulate active India Jio/Airtel LTE network links for testing",
+                        color = TextSecondary,
+                        fontSize = 11.sp
+                    )
+                }
+
+                Switch(
+                    checked = isMocking,
+                    onCheckedChange = { viewModel.setMockIndiaNetwork(it) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = NeonCyan,
+                        checkedTrackColor = NeonCyan.copy(alpha = 0.4f),
+                        uncheckedThumbColor = Color.Gray,
+                        uncheckedTrackColor = Color.DarkGray
+                    )
+                )
             }
         }
     }
@@ -2023,6 +2289,13 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
     val successfullyVerified by viewModel.paymentVerifiedSuccessfully.collectAsStateWithLifecycle()
     val paymentError by viewModel.paymentError.collectAsStateWithLifecycle()
 
+    // Interactive custom checkout gateway variables
+    val selectedPaymentMethod by viewModel.selectedPaymentMethod.collectAsStateWithLifecycle()
+    val paypalEmail by viewModel.paypalEmail.collectAsStateWithLifecycle()
+    val cardNumber by viewModel.cardNumber.collectAsStateWithLifecycle()
+    val cardExpiry by viewModel.cardExpiry.collectAsStateWithLifecycle()
+    val cardCvv by viewModel.cardCvv.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -2034,18 +2307,19 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
             context.startActivity(chooser)
         } catch (e: Exception) {
             android.util.Log.e("UskhaPayment", "Failed to launch UPI", e)
-            Toast.makeText(context, "No UPI apps (Google Pay, PhonePe, Paytm, BHIM) found.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "No UPI apps found. Switch to PayPal or Card payment.", Toast.LENGTH_LONG).show()
         }
     }
 
     val coinCount = when (amount) {
+        9 -> 25
         30 -> 70
         100 -> 233
         250 -> 585
         500 -> 1170
         1000 -> 2350
         2500 -> 6000
-        else -> 70
+        else -> 25
     }
 
     Column(
@@ -2070,13 +2344,13 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 )
             }
             Text(
-                text = "Secure UPI Payment",
+                text = "Premium Coin Checkout",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
             IconButton(onClick = {
-                Toast.makeText(context, "Secure encrypted UPI peer link active", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Secure encrypted multi-channel active", Toast.LENGTH_SHORT).show()
             }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
@@ -2086,11 +2360,101 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // ⚡ SPECIAL FLASH PROMO: 9 RS FOR 25 COINS (MANDATED FOR HIGHEST ACCURACY)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+                .clickable {
+                    viewModel.updatePayAmount(9)
+                    if (selectedPaymentMethod == PaymentMethod.UPI) {
+                        triggerUpiPayment(9)
+                    }
+                },
+            colors = CardDefaults.cardColors(
+                containerColor = if (amount == 9) NeonCyan.copy(alpha = 0.12f) else Color(0xFF1B1E28)
+            ),
+            border = BorderStroke(
+                width = if (amount == 9) 2.dp else 1.dp,
+                brush = if (amount == 9) Brush.linearGradient(listOf(NeonCyan, AccentTeal)) else SolidColor(GridBorder)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                // Sparkling text badge
+                Text(
+                    text = "FLASH OFFERS",
+                    color = ObsidianBlack,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .clip(RoundedCornerShape(bottomStart = 8.dp))
+                        .background(NeonCyan)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(if (amount == 9) NeonCyan else Color.Gray.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Stars,
+                            contentDescription = "Promo",
+                            tint = if (amount == 9) ObsidianBlack else Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "⚡ Mini Wallet Starter Pack",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "Get 25 Coins for just ₹9! Perfect for direct voice and standard priority matching.",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "₹9",
+                            color = NeonCyan,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Text(
+                            text = "25 COINS",
+                            color = Color.LightGray,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Subscription/payment item tabs: 30, 100, 250, 500, 1000, 2500 RS
         Text(
-            text = "SELECT COIN PACK / OFFER",
+            text = "SELECT EXTRA COIN PACK TIER",
             color = Color.LightGray,
             fontWeight = FontWeight.Bold,
             fontSize = 11.sp,
@@ -2110,7 +2474,7 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 selected = amount == 30,
                 onClick = {
                     viewModel.updatePayAmount(30)
-                    triggerUpiPayment(30)
+                    if (selectedPaymentMethod == PaymentMethod.UPI) triggerUpiPayment(30)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -2121,7 +2485,7 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 selected = amount == 100,
                 onClick = {
                     viewModel.updatePayAmount(100)
-                    triggerUpiPayment(100)
+                    if (selectedPaymentMethod == PaymentMethod.UPI) triggerUpiPayment(100)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -2141,7 +2505,7 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 selected = amount == 250,
                 onClick = {
                     viewModel.updatePayAmount(250)
-                    triggerUpiPayment(250)
+                    if (selectedPaymentMethod == PaymentMethod.UPI) triggerUpiPayment(250)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -2152,7 +2516,7 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 selected = amount == 500,
                 onClick = {
                     viewModel.updatePayAmount(500)
-                    triggerUpiPayment(500)
+                    if (selectedPaymentMethod == PaymentMethod.UPI) triggerUpiPayment(500)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -2172,7 +2536,7 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 selected = amount == 1000,
                 onClick = {
                     viewModel.updatePayAmount(1000)
-                    triggerUpiPayment(1000)
+                    if (selectedPaymentMethod == PaymentMethod.UPI) triggerUpiPayment(1000)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -2183,13 +2547,96 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 selected = amount == 2500,
                 onClick = {
                     viewModel.updatePayAmount(2500)
-                    triggerUpiPayment(2500)
+                    if (selectedPaymentMethod == PaymentMethod.UPI) triggerUpiPayment(2500)
                 },
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // CHOOSE PAYMENT GATEWAY METHOD SELECTOR TAB PANEL
+        Text(
+            text = "CHOOSE TRANSACTION GATEWAY SYSTEM",
+            color = Color.LightGray,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(Color(0xFF1B1E28))
+                .border(BorderStroke(1.dp, GridBorder), RoundedCornerShape(14.dp))
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // UPI option
+            val isUpiActive = selectedPaymentMethod == PaymentMethod.UPI
+            val upiBg = if (isUpiActive) NeonCyan else Color.Transparent
+            val upiFg = if (isUpiActive) ObsidianBlack else Color.Gray
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(upiBg)
+                    .clickable { viewModel.selectPaymentMethod(PaymentMethod.UPI) }
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Smartphone, contentDescription = "UPI Gateway", tint = upiFg, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("BHIM UPI", color = upiFg, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            }
+
+            // PayPal option
+            val isPaypalActive = selectedPaymentMethod == PaymentMethod.PAYPAL
+            val paypalBg = if (isPaypalActive) NeonCyan else Color.Transparent
+            val paypalFg = if (isPaypalActive) ObsidianBlack else Color.Gray
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(paypalBg)
+                    .clickable { viewModel.selectPaymentMethod(PaymentMethod.PAYPAL) }
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Send, contentDescription = "PayPal Gateway", tint = paypalFg, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("PayPal Express", color = paypalFg, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            }
+
+            // Credit/Debit Card option
+            val isCardActive = selectedPaymentMethod == PaymentMethod.CARD
+            val cardBg = if (isCardActive) NeonCyan else Color.Transparent
+            val cardFg = if (isCardActive) ObsidianBlack else Color.Gray
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(cardBg)
+                    .clickable { viewModel.selectPaymentMethod(PaymentMethod.CARD) }
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.CreditCard, contentDescription = "Card Gateway", tint = cardFg, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Credit Card", color = cardFg, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         if (successfullyVerified) {
             // Gold sparkling confirmation badge
@@ -2210,67 +2657,174 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Premium design: Official Coin Receiver Wallet / UPI ID Header
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 18.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF1B1E28))
-                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)), RoundedCornerShape(12.dp))
-                            .clickable {
-                                clipboardManager.setText(AnnotatedString("0naveen7290odk@fam"))
-                                Toast.makeText(context, "UPI ID Copied!", Toast.LENGTH_SHORT).show()
+                    when (selectedPaymentMethod) {
+                        PaymentMethod.UPI -> {
+                            // Premium design: Official Coin Receiver Wallet / UPI ID Header
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 18.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF1B1E28))
+                                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)), RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        clipboardManager.setText(AnnotatedString("0naveen7290odk@fam"))
+                                        Toast.makeText(context, "UPI ID Copied!", Toast.LENGTH_SHORT).show()
+                                    }
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(NeonCyan.copy(alpha = 0.12f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountBalanceWallet,
+                                        contentDescription = "Coin Payment ID",
+                                        tint = NeonCyan,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "RECEIVER UPI ID FOR COINS",
+                                        color = Color.Gray,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 0.6.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "0naveen7290odk@fam",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(NeonCyan.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AccountBalanceWallet,
-                                contentDescription = "Coin Payment ID",
-                                tint = NeonCyan,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "RECEIVER UPI ID FOR COINS",
-                                color = Color.Gray,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 0.6.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "0naveen7290odk@fam",
-                                color = Color.White,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
 
-                    // Selected Package info panel instead of QR
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF1B1E28))
-                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(16.dp))
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            // Selected Package info panel instead of QR
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF1B1E28))
+                                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(16.dp))
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "ORDER VALUE BHIM UPI",
+                                        color = Color.Gray,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "₹$amount",
+                                        color = Color.White,
+                                        fontSize = 36.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Stars,
+                                            contentDescription = "Coins",
+                                            tint = NeonCyan,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "$coinCount Coins package will be unlocked",
+                                            color = Color.LightGray,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Primary Interactive CTA Button to trigger auto-launch
+                            Button(
+                                onClick = { triggerUpiPayment(amount) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(54.dp),
+                                shape = RoundedCornerShape(27.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFA8C7FA),
+                                    contentColor = Color(0xFF001D35)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FlashOn,
+                                    contentDescription = "Pay",
+                                    tint = Color(0xFF001D35),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "⚡ PAY NOW VIA UPI APPS",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = "ORDER VALUE",
+                                text = "Launches Google Pay, PhonePe, Paytm, or BHIM automatically.",
+                                color = Color.Gray,
+                                fontSize = 10.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                        }
+
+                        PaymentMethod.PAYPAL -> {
+                            // Stunning Custom PayPal Gate Branding
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 18.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF003087).copy(alpha = 0.08f))
+                                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)), RoundedCornerShape(12.dp))
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "PayPal",
+                                    color = Color(0xFF0079C1),
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Express",
+                                    color = Color(0xFF00457C),
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Black,
+                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                )
+                            }
+
+                            Text(
+                                text = "ORDER VALUE PAYPAL INSTANT SECURE",
                                 color = Color.Gray,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -2284,87 +2838,293 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                                 fontWeight = FontWeight.Black
                             )
                             Spacer(modifier = Modifier.height(6.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                            Text(
+                                text = "You will receive $coinCount Coins instantly upon validation.",
+                                color = TextSecondary,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Paypal Email address registration
+                            TextField(
+                                value = paypalEmail,
+                                onValueChange = { viewModel.updatePaypalEmail(it) },
+                                placeholder = { Text("PayPal Registered Email (e.g. user@domain.com)", color = Color.Gray, fontSize = 13.sp) },
+                                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "PayPal ID", tint = Color.Gray) },
+                                colors = TextFieldDefaults.colors(
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    focusedContainerColor = Color(0xFF1B1E28),
+                                    unfocusedContainerColor = Color(0xFF1B1E28),
+                                    focusedIndicatorColor = Color(0xFF0079C1),
+                                    unfocusedIndicatorColor = Color.Transparent
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("paypal_email_input"),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            Button(
+                                onClick = { viewModel.submitSimulatedPaymentReceipt() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFFC439), // PayPal gold
+                                    contentColor = Color(0xFF003087)  // PayPal deep blue
+                                ),
+                                shape = RoundedCornerShape(27.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(54.dp)
+                                    .testTag("paypal_submit_button"),
+                                enabled = !isProcessing
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Stars,
-                                    contentDescription = "Coins",
-                                    tint = NeonCyan,
-                                    modifier = Modifier.size(16.dp)
+                                if (isProcessing) {
+                                    CircularProgressIndicator(
+                                        color = Color(0xFF003087),
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text("Validating PayPal signature...", color = Color(0xFF003087), fontWeight = FontWeight.Bold)
+                                } else {
+                                    Text("⚡ PayPal Instant Check out", fontWeight = FontWeight.Black)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "Authenticates instantly inside a secure PayPal browser sandbox loop.",
+                                color = Color.Gray,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        PaymentMethod.CARD -> {
+                            // Virtual holographic premium debit card
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF3A1C71), Color(0xFFD76D77), Color(0xFFFFAF7B))
+                                        )
+                                    )
+                                    .padding(18.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "PREMIUM WALLET SECURE",
+                                            color = Color.White.copy(alpha = 0.8f),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 1.sp
+                                        )
+                                        val isVisa = cardNumber.replace(" ", "").startsWith("4")
+                                        Text(
+                                            text = if (isVisa) "VISA" else "MC SECURE",
+                                            color = Color.White,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Black,
+                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                        )
+                                    }
+
+                                    // Display raw card number nicely chunky
+                                    val formattedNum = remember(cardNumber) {
+                                        val clean = cardNumber.replace(" ", "")
+                                        val chunks = clean.chunked(4)
+                                        if (chunks.isEmpty()) "•••• •••• •••• ••••" else {
+                                            val filled = chunks.toMutableList()
+                                            while (filled.size < 4) filled.add("••••")
+                                            filled.joinToString(" ") { it.padEnd(4, '•') }.take(19)
+                                        }
+                                    }
+                                    Text(
+                                        text = formattedNum,
+                                        color = Color.White,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 2.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text("CARD HOLDER", color = Color.White.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                text = "USKHA VIP MEMBER",
+                                                color = Color.White,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("EXPIRE", color = Color.White.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                                Text(if (cardExpiry.isNotEmpty()) cardExpiry else "MM/YY", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("CVV", color = Color.White.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                                Text(if (cardCvv.isNotEmpty()) cardCvv.map { "•" }.joinToString("") else "•••", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            // Card Number interactive field
+                            TextField(
+                                value = cardNumber,
+                                onValueChange = {
+                                    val cleanNum = it.filter { char -> char.isDigit() }.take(16)
+                                    viewModel.updateCardDetails(cleanNum, cardExpiry, cardCvv)
+                                },
+                                placeholder = { Text("Card Number (16 Digits)", color = Color.Gray, fontSize = 13.sp) },
+                                leadingIcon = { Icon(Icons.Default.CreditCard, contentDescription = "Card icon", tint = Color.Gray) },
+                                colors = TextFieldDefaults.colors(
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    focusedContainerColor = Color(0xFF1B1E28),
+                                    unfocusedContainerColor = Color(0xFF1B1E28),
+                                    focusedIndicatorColor = NeonCyan,
+                                    unfocusedIndicatorColor = Color.Transparent
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("card_number_input"),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // Expiry Field
+                                TextField(
+                                    value = cardExpiry,
+                                    onValueChange = {
+                                        val clean = it.take(5)
+                                        viewModel.updateCardDetails(cardNumber, clean, cardCvv)
+                                    },
+                                    placeholder = { Text("Expiry (MM/YY)", color = Color.Gray, fontSize = 13.sp) },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedContainerColor = Color(0xFF1B1E28),
+                                        unfocusedContainerColor = Color(0xFF1B1E28),
+                                        focusedIndicatorColor = NeonCyan,
+                                        unfocusedIndicatorColor = Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("card_expiry_input"),
+                                    singleLine = true
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "$coinCount Coins package will be unlocked",
-                                    color = Color.LightGray,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium
+
+                                // CVV Field
+                                TextField(
+                                    value = cardCvv,
+                                    onValueChange = {
+                                        val clean = it.filter { char -> char.isDigit() }.take(3)
+                                        viewModel.updateCardDetails(cardNumber, cardExpiry, clean)
+                                    },
+                                    placeholder = { Text("CVV", color = Color.Gray, fontSize = 13.sp) },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedContainerColor = Color(0xFF1B1E28),
+                                        unfocusedContainerColor = Color(0xFF1B1E28),
+                                        focusedIndicatorColor = NeonCyan,
+                                        unfocusedIndicatorColor = Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("card_cvv_input"),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true
                                 )
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            Button(
+                                onClick = { viewModel.submitSimulatedPaymentReceipt() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = NeonCyan,
+                                    contentColor = ObsidianBlack
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .testTag("card_submit_button"),
+                                enabled = !isProcessing
+                            ) {
+                                if (isProcessing) {
+                                    CircularProgressIndicator(
+                                        color = ObsidianBlack,
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text("Passing PCI card validation...", fontWeight = FontWeight.Bold)
+                                } else {
+                                    Text("🛡️ Pay ₹$amount Securely", fontWeight = FontWeight.Black)
+                                }
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Primary Interactive CTA Button to trigger auto-launch
-                    Button(
-                        onClick = { triggerUpiPayment(amount) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp),
-                        shape = RoundedCornerShape(27.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFA8C7FA),
-                            contentColor = Color(0xFF001D35)
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FlashOn,
-                            contentDescription = "Pay",
-                            tint = Color(0xFF001D35),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "⚡ PAY NOW VIA UPI APPS",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "Launches Google Pay, PhonePe, Paytm, or BHIM automatically.",
-                        color = Color.Gray,
-                        fontSize = 10.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
-
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Official Powered by UPI lockup
+            // Official Powered lockup
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(vertical = 12.dp)
             ) {
                 Text(
-                    text = "POWERED BY ",
+                    text = "SECURED BANK LINK ",
                     color = Color.Gray,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Light,
                     letterSpacing = 0.5.sp
                 )
                 Text(
-                    text = "UPI",
+                    text = "AES-256",
                     color = Color.White,
-                    fontSize = 15.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Black,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     letterSpacing = 1.sp
@@ -2379,69 +3139,81 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Transaction ID paste field
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
-                Text(
-                    text = "Verify Payment Transaction",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                TextField(
-                    value = enteredUtr,
-                    onValueChange = { viewModel.updateUtrField(it) },
-                    placeholder = { Text("Paste UPI Transaction Ref ID / UTR Code", fontSize = 13.sp, color = TextAccent) },
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedContainerColor = SurfaceCard,
-                        unfocusedContainerColor = SurfaceCard,
-                        focusedIndicatorColor = NeonCyan,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("payment_ref_input"),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
+            if (selectedPaymentMethod == PaymentMethod.UPI) {
+                // Transaction ID paste field
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+                    Text(
+                        text = "Verify Payment Transaction",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    TextField(
+                        value = enteredUtr,
+                        onValueChange = { viewModel.updateUtrField(it) },
+                        placeholder = { Text("Paste UPI Transaction Ref ID / UTR Code", fontSize = 13.sp, color = TextAccent) },
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedContainerColor = SurfaceCard,
+                            unfocusedContainerColor = SurfaceCard,
+                            focusedIndicatorColor = NeonCyan,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("payment_ref_input"),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
 
+                    if (paymentError != null) {
+                        Text(
+                            text = paymentError ?: "",
+                            color = NeonPink,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { viewModel.submitSimulatedPaymentReceipt() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NeonCyan,
+                            contentColor = ObsidianBlack
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp)
+                            .testTag("submit_receipt_button"),
+                        enabled = !isProcessing
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(
+                                color = ObsidianBlack,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text("Verifying Transaction... Please Wait.", fontWeight = FontWeight.Bold)
+                        } else {
+                            Text("Activate Premium (${amount} RS)", fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
+            } else {
+                // For card and PayPal, show custom validation error check if any
                 if (paymentError != null) {
                     Text(
                         text = paymentError ?: "",
                         color = NeonPink,
                         fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp, start = 12.dp, end = 12.dp)
                     )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Button(
-                    onClick = { viewModel.submitSimulatedPaymentReceipt() },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = NeonCyan,
-                        contentColor = ObsidianBlack
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp)
-                        .testTag("submit_receipt_button"),
-                    enabled = !isProcessing
-                ) {
-                    if (isProcessing) {
-                        CircularProgressIndicator(
-                            color = ObsidianBlack,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text("Verifying Transaction... Please Wait.", fontWeight = FontWeight.Bold)
-                    } else {
-                        Text("Activate Premium (${amount} RS)", fontWeight = FontWeight.Black)
-                    }
                 }
             }
         }
