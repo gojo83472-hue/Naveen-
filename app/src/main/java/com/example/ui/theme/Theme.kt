@@ -25,15 +25,28 @@ private val DarkColorScheme =
     onSecondary = ObsidianBlack
   )
 
-private val LightColorScheme = DarkColorScheme // Uskha is dark mode only for high-end luxury vibe!
+private val LightColorScheme =
+  lightColorScheme(
+    primary = androidx.compose.ui.graphics.Color(0xFF006064),
+    secondary = androidx.compose.ui.graphics.Color(0xFFC2185B),
+    tertiary = androidx.compose.ui.graphics.Color(0xFF7B1FA2),
+    background = androidx.compose.ui.graphics.Color(0xFFF5F5F7),
+    surface = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+    onBackground = androidx.compose.ui.graphics.Color(0xFF13131A),
+    onSurface = androidx.compose.ui.graphics.Color(0xFF13131A),
+    primaryContainer = androidx.compose.ui.graphics.Color(0xFFE0F7FA),
+    secondaryContainer = androidx.compose.ui.graphics.Color(0xFFFCE4EC),
+    onPrimary = androidx.compose.ui.graphics.Color.White,
+    onSecondary = androidx.compose.ui.graphics.Color.White
+  )
 
 @Composable
 fun MyApplicationTheme(
-  darkTheme: Boolean = true, // Force dark mode
-  dynamicColor: Boolean = false, // Use our handcrafted design system for consistent premium styling
+  darkTheme: Boolean = true,
+  dynamicColor: Boolean = false,
   content: @Composable () -> Unit,
 ) {
-  val colorScheme = DarkColorScheme
+  val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
   MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
 }

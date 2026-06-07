@@ -24,6 +24,7 @@ sealed class UskhaScreen {
     object VideoChat : UskhaScreen()
     object PremiumHub : UskhaScreen()
     object SafetyCenter : UskhaScreen()
+    object Settings : UskhaScreen()
 }
 
 enum class MatchMode {
@@ -73,7 +74,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
     val isStrangerMuted = _isStrangerMuted.asStateFlow()
 
     // Custom Payments & UPI states
-    private val _selectedPayAmount = MutableStateFlow(9) // 9 RS standard, 19 RS girl video call
+    private val _selectedPayAmount = MutableStateFlow(30) // 30 RS standard starter pack, up to 2500 RS
     val selectedPayAmount = _selectedPayAmount.asStateFlow()
 
     private val _enteredUtr = MutableStateFlow("")
@@ -87,6 +88,64 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _paymentError = MutableStateFlow<String?>(null)
     val paymentError = _paymentError.asStateFlow()
+
+    // Custom settings states
+    private val _isDarkTheme = MutableStateFlow(true)
+    val isDarkTheme = _isDarkTheme.asStateFlow()
+
+    private val _selectedLanguage = MutableStateFlow("English")
+    val selectedLanguage = _selectedLanguage.asStateFlow()
+
+    private val _isConnectSoundEnabled = MutableStateFlow(true)
+    val isConnectSoundEnabled = _isConnectSoundEnabled.asStateFlow()
+
+    private val _isDisconnectSoundEnabled = MutableStateFlow(true)
+    val isDisconnectSoundEnabled = _isDisconnectSoundEnabled.asStateFlow()
+
+    private val _audioVideoQuality = MutableStateFlow("Perfect HD Stereo") // "Perfect HD Stereo", "Ultra Crisp Voice", "Standard Eco"
+    val audioVideoQuality = _audioVideoQuality.asStateFlow()
+
+    fun setDarkTheme(enabled: Boolean) {
+        _isDarkTheme.value = enabled
+    }
+
+    fun setLanguage(lang: String) {
+        _selectedLanguage.value = lang
+    }
+
+    fun setConnectSoundEnabled(enabled: Boolean) {
+        _isConnectSoundEnabled.value = enabled
+    }
+
+    fun setDisconnectSoundEnabled(enabled: Boolean) {
+        _isDisconnectSoundEnabled.value = enabled
+    }
+
+    fun setAudioVideoQuality(mode: String) {
+        _audioVideoQuality.value = mode
+    }
+
+    fun playConnectSound() {
+        if (_isConnectSoundEnabled.value) {
+            try {
+                val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                toneG.startTone(android.media.ToneGenerator.TONE_CDMA_PIP, 120)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun playDisconnectSound() {
+        if (_isDisconnectSoundEnabled.value) {
+            try {
+                val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                toneG.startTone(android.media.ToneGenerator.TONE_CDMA_ABBR_ALERT, 220)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     // --- Age Verification System States ---
     private val _ageVerificationMethod = MutableStateFlow("NONE") // "NONE", "THIRD_PARTY", "ID_SCANNER"
@@ -263,7 +322,21 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun navigateTo(screen: UskhaScreen) {
+        val previousScreen = _currentScreen.value
         _currentScreen.value = screen
+
+        // Connect sound trigger
+        if ((screen is UskhaScreen.TextChat || screen is UskhaScreen.VideoChat) &&
+            previousScreen !is UskhaScreen.TextChat && previousScreen !is UskhaScreen.VideoChat) {
+            playConnectSound()
+        }
+
+        // Disconnect sound trigger
+        if (screen is UskhaScreen.Dashboard &&
+            (previousScreen is UskhaScreen.TextChat || previousScreen is UskhaScreen.VideoChat)) {
+            playDisconnectSound()
+        }
+
         // Reset states if leaving active screens
         if (screen is UskhaScreen.Dashboard) {
             _activeMatch.value = null
@@ -296,7 +369,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
         val currentCoins = prefs.walletCoins
         if (currentCoins < requiredCoins) {
             // Redirect to pay
-            _selectedPayAmount.value = if (mode == MatchMode.VIDEO) 19 else 9
+            _selectedPayAmount.value = 30
             _currentScreen.value = UskhaScreen.PremiumHub
             return
         }
@@ -317,7 +390,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
                 if (filter == "Girl" && !prefs.premiumSubscribed && !prefs.girlVideoUnlocked) {
                     // Redirect to pay
                     _isSearching.value = false
-                    _selectedPayAmount.value = 19
+                    _selectedPayAmount.value = 30
                     _currentScreen.value = UskhaScreen.PremiumHub
                     return@launch
                 }
@@ -331,7 +404,7 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
                     completeMatch(mode)
                 } else {
                     _isSearching.value = false
-                    _selectedPayAmount.value = if (mode == MatchMode.VIDEO) 19 else 9
+                    _selectedPayAmount.value = 30
                     _currentScreen.value = UskhaScreen.PremiumHub
                 }
             }
@@ -523,18 +596,20 @@ class UskhaViewModel(application: Application) : AndroidViewModel(application) {
             val amount = _selectedPayAmount.value
             val current = repository.getUserPreferencesDirect()
             
-            if (amount == 9) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, walletCoins = current.walletCoins + 15))
-            } else if (amount == 19) {
-                repository.saveUserPreferences(current.copy(girlVideoUnlocked = true, walletCoins = current.walletCoins + 79))
+            if (amount == 30) {
+                repository.saveUserPreferences(current.copy(premiumSubscribed = true, walletCoins = current.walletCoins + 70))
             } else if (amount == 100) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 250))
+                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 233))
+            } else if (amount == 250) {
+                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 585))
             } else if (amount == 500) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 1399))
+                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 1170))
             } else if (amount == 1000) {
-                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 3000))
+                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 2350))
+            } else if (amount == 2500) {
+                repository.saveUserPreferences(current.copy(premiumSubscribed = true, girlVideoUnlocked = true, walletCoins = current.walletCoins + 6000))
             } else {
-                repository.saveUserPreferences(current.copy(walletCoins = current.walletCoins + 79))
+                repository.saveUserPreferences(current.copy(walletCoins = current.walletCoins + 70))
             }
         }
     }

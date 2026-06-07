@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -140,6 +141,7 @@ fun UskhaMainApp(viewModel: UskhaViewModel) {
                     is UskhaScreen.VideoChat -> VideoChatScreen(viewModel = viewModel)
                     is UskhaScreen.PremiumHub -> PremiumHubScreen(viewModel = viewModel, prefs = prefs)
                     is UskhaScreen.SafetyCenter -> SafetyCenterScreen(viewModel = viewModel)
+                    is UskhaScreen.Settings -> SettingsScreen(viewModel = viewModel)
                 }
             }
         }
@@ -1042,6 +1044,7 @@ fun DashboardScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
         DashboardHeader(
             onOpenPremium = { viewModel.navigateTo(UskhaScreen.PremiumHub) },
             onOpenSafety = { viewModel.navigateTo(UskhaScreen.SafetyCenter) },
+            onOpenSettings = { viewModel.navigateTo(UskhaScreen.Settings) },
             coins = prefs.walletCoins,
             isVIP = prefs.premiumSubscribed
         )
@@ -1144,6 +1147,9 @@ fun MatchingScreen(viewModel: UskhaViewModel) {
     val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
     val matchMode by viewModel.matchMode.collectAsStateWithLifecycle()
     val genderFilter by viewModel.genderFilter.collectAsStateWithLifecycle()
+    
+    val selectedLanguage by viewModel.selectedLanguage.collectAsStateWithLifecycle()
+    val audioVideoQuality by viewModel.audioVideoQuality.collectAsStateWithLifecycle()
 
     var statusTextIndex by remember { mutableStateOf(0) }
     val searchPhrases = listOf(
@@ -1170,14 +1176,14 @@ fun MatchingScreen(viewModel: UskhaViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = if (matchMode == MatchMode.TEXT) "TEXT CHAT STREAM" else "LIVE VIDEO LINK",
+            text = if (matchMode == MatchMode.TEXT) "SECURE REQUEST BROADCAST" else "VIDEO STREAM LINK REQUEST",
             color = NeonCyan,
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 2.sp
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = "Target Criteria: $genderFilter",
@@ -1186,33 +1192,119 @@ fun MatchingScreen(viewModel: UskhaViewModel) {
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         // Spectacular sweeping Radar simulation
         RadarScanner(genderFilter = genderFilter)
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // Outgoing Request Profile payload card
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(NeonCyan)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "METADATA HANDSHAKE PAYLOAD",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(NeonPink.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "ZKP SECURE",
+                            color = NeonPink,
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("SPOKEN LANGUAGE", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text(selectedLanguage, color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("AUDIO/VIDEO CODEC", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text(audioVideoQuality, color = NeonCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("CONNECTION STRENGTH", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text("Ultra HD Sound Profile", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("MATCH METHOD", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text(if (matchMode == MatchMode.TEXT) "Encrypted Chat" else "Stereo Cam Link", color = AccentTeal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Animating statuses
         Text(
             text = searchPhrases[statusTextIndex],
             color = TextSecondary,
-            fontSize = 15.sp,
+            fontSize = 14.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.height(24.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = "Please be respectful. Committing harassment triggers instant automated safety bans.",
             color = TextAccent,
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = { viewModel.stopMatching() },
@@ -1229,7 +1321,7 @@ fun MatchingScreen(viewModel: UskhaViewModel) {
         ) {
             Icon(Icons.Default.Close, contentDescription = "Cancel", modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Cancel Stream", fontWeight = FontWeight.Bold)
+            Text("Cancel Request", fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -1530,6 +1622,10 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
         )
     }
     var isCyberMaskOn by remember { mutableStateOf(true) }
+    
+    // Live interactive camera filters and lovely/sad/cute/angry visual settings
+    var activeCameraFilter by remember { mutableStateOf("None") }
+    var activeEmotion by remember { mutableStateOf<String?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -1623,7 +1719,28 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
                 contentAlignment = Alignment.Center
             ) {
                 if (hasCameraPermission) {
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .drawWithContent {
+                                drawContent()
+                                // Apply the active camera filter onto local feed dynamically
+                                when (activeCameraFilter) {
+                                    "Beauty" -> {
+                                        drawRect(color = Color.White.copy(alpha = 0.15f), blendMode = androidx.compose.ui.graphics.BlendMode.Overlay)
+                                    }
+                                    "Sepia" -> {
+                                        drawRect(color = Color(0xFF704214).copy(alpha = 0.35f), blendMode = androidx.compose.ui.graphics.BlendMode.Color)
+                                    }
+                                    "Vintage" -> {
+                                        drawRect(color = Color(0xFFE5A65D).copy(alpha = 0.25f), blendMode = androidx.compose.ui.graphics.BlendMode.Multiply)
+                                    }
+                                    "Monochrome" -> {
+                                        drawRect(color = Color.Gray.copy(alpha = 0.5f), blendMode = androidx.compose.ui.graphics.BlendMode.Saturation)
+                                    }
+                                }
+                            }
+                    ) {
                         CameraXFeedPreview(modifier = Modifier.fillMaxSize())
 
                         if (isCyberMaskOn) {
@@ -1705,6 +1822,155 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
             }
         }
 
+        // Camera Filters Floating Selection Tray (Left Center)
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 12.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.Black.copy(alpha = 0.6f))
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("FILTERS", color = AccentTeal, fontSize = 9.sp, fontWeight = FontWeight.Black)
+            listOf(
+                "None" to "🎬",
+                "Beauty" to "✨",
+                "Sepia" to "🍂",
+                "Vintage" to "🎞️",
+                "Monochrome" to "👤"
+            ).forEach { (filt, emoji) ->
+                val isSelected = activeCameraFilter == filt
+                IconButton(
+                    onClick = {
+                        activeCameraFilter = filt
+                        try {
+                            val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                            toneG.startTone(android.media.ToneGenerator.TONE_CDMA_PIP, 40)
+                        } catch (e: Exception) {}
+                    },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(if (isSelected) AccentTeal else SurfaceCard.copy(alpha = 0.85f))
+                        .size(38.dp)
+                ) {
+                    Text(emoji, fontSize = 16.sp)
+                }
+            }
+        }
+
+        // Emotional Reactions Overlay Floating Selection Tray (Right Center)
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.Black.copy(alpha = 0.6f))
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("VIBES", color = NeonPink, fontSize = 9.sp, fontWeight = FontWeight.Black)
+            listOf(
+                "Lovely" to "❤️",
+                "Sad" to "😢",
+                "Cute" to "✨",
+                "Angry" to "😡"
+            ).forEach { (emo, emoji) ->
+                val isSelected = activeEmotion == emo
+                IconButton(
+                    onClick = {
+                        activeEmotion = if (isSelected) null else emo
+                        try {
+                            val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                            toneG.startTone(android.media.ToneGenerator.TONE_CDMA_PIP, 40)
+                        } catch (e: Exception) {}
+                    },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(if (isSelected) NeonPink else SurfaceCard.copy(alpha = 0.85f))
+                        .size(38.dp)
+                ) {
+                    Text(emoji, fontSize = 16.sp)
+                }
+            }
+        }
+
+        // Interactive Emotion Canvas effects overlay spanning entire fullscreen
+        activeEmotion?.let { emo ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent)
+            ) {
+                when (emo) {
+                    "Lovely" -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .border(BorderStroke(4.dp, Color(0xFFFF1493).copy(alpha = 0.6f)))
+                        ) {
+                            Text("💖 LOVELY EMOTION ACTIVE 💖", color = Color(0xFFFF1493), fontWeight = FontWeight.Black, fontSize = 12.sp, modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = 0.6f)).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(8.dp)))
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val w = size.width
+                                val h = size.height
+                                drawCircle(color = Color(0xFFFF1493).copy(alpha = 0.3f), radius = 55f, center = Offset(w * 0.2f, h * 0.25f))
+                                drawCircle(color = Color(0xFFFF1493).copy(alpha = 0.3f), radius = 75f, center = Offset(w * 0.82f, h * 0.18f))
+                                drawCircle(color = Color(0xFFFF1493).copy(alpha = 0.3f), radius = 60f, center = Offset(w * 0.25f, h * 0.68f))
+                                drawCircle(color = Color(0xFFFF1493).copy(alpha = 0.3f), radius = 80f, center = Offset(w * 0.77f, h * 0.72f))
+                            }
+                        }
+                    }
+                    "Sad" -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF00BFFF).copy(alpha = 0.12f))
+                                .border(BorderStroke(4.dp, Color(0xFF00BFFF).copy(alpha = 0.5f)))
+                        ) {
+                            Text("😢 SAD SOULFUL VIBE ENGAGED 😢", color = Color(0xFF00BFFF), fontWeight = FontWeight.Black, fontSize = 12.sp, modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = 0.6f)).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(8.dp)))
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val w = size.width
+                                val h = size.height
+                                drawLine(color = Color(0xFF00BFFF).copy(alpha = 0.35f), start = Offset(w * 0.15f, h * 0.2f), end = Offset(w * 0.15f, h * 0.38f), strokeWidth = 6f)
+                                drawLine(color = Color(0xFF00BFFF).copy(alpha = 0.35f), start = Offset(w * 0.32f, h * 0.45f), end = Offset(w * 0.32f, h * 0.6f), strokeWidth = 6f)
+                                drawLine(color = Color(0xFF00BFFF).copy(alpha = 0.35f), start = Offset(w * 0.68f, h * 0.15f), end = Offset(w * 0.68f, h * 0.32f), strokeWidth = 6f)
+                                drawLine(color = Color(0xFF00BFFF).copy(alpha = 0.35f), start = Offset(w * 0.88f, h * 0.52f), end = Offset(w * 0.88f, h * 0.68f), strokeWidth = 6f)
+                            }
+                        }
+                    }
+                    "Cute" -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .border(BorderStroke(4.dp, Color(0xFFFFD700).copy(alpha = 0.6f)))
+                        ) {
+                            Text("✨ CUTE SPARKLING SPARK ✨", color = Color(0xFFFFD700), fontWeight = FontWeight.Black, fontSize = 12.sp, modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = 0.6f)).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(8.dp)))
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val w = size.width
+                                val h = size.height
+                                drawCircle(color = Color(0xFFFFD700).copy(alpha = 0.4f), radius = 30f, center = Offset(w * 0.18f, h * 0.15f))
+                                drawCircle(color = Color(0xFFFFD700).copy(alpha = 0.4f), radius = 20f, center = Offset(w * 0.85f, h * 0.3f))
+                                drawCircle(color = Color(0xFFFFD700).copy(alpha = 0.4f), radius = 35f, center = Offset(w * 0.12f, h * 0.62f))
+                                drawCircle(color = Color(0xFFFFD700).copy(alpha = 0.4f), radius = 25f, center = Offset(w * 0.88f, h * 0.78f))
+                            }
+                        }
+                    }
+                    "Angry" -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Red.copy(alpha = 0.14f))
+                                .border(BorderStroke(5.dp, Color.Red.copy(alpha = 0.65f)))
+                        ) {
+                            Text("😡 FIERY ANGER BURST 😡", color = Color.Red, fontWeight = FontWeight.Black, fontSize = 12.sp, modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = 0.6f)).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(8.dp)))
+                        }
+                    }
+                }
+            }
+        }
+
         // Real-time scan verdict dialog
         if (scanVerdict != null) {
             Box(
@@ -1760,6 +2026,28 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
+    val triggerUpiPayment = { selectedAmt: Int ->
+        try {
+            val upiUri = android.net.Uri.parse("upi://pay?pa=0naveen7290odk@fam&pn=Naveen&am=$selectedAmt&cu=INR&tn=Uskha%20Premium")
+            val upiIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, upiUri)
+            val chooser = android.content.Intent.createChooser(upiIntent, "Pay $selectedAmt RS to Naveen via:")
+            context.startActivity(chooser)
+        } catch (e: Exception) {
+            android.util.Log.e("UskhaPayment", "Failed to launch UPI", e)
+            Toast.makeText(context, "No UPI apps (Google Pay, PhonePe, Paytm, BHIM) found.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val coinCount = when (amount) {
+        30 -> 70
+        100 -> 233
+        250 -> 585
+        500 -> 1170
+        1000 -> 2350
+        2500 -> 6000
+        else -> 70
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1768,27 +2056,39 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Simple banner
+        // google Pay Replica Top App Bar matching the screenshot exactly
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { viewModel.navigateTo(UskhaScreen.Dashboard) }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
             }
             Text(
-                text = "Premium Gateway",
+                text = "Secure UPI Payment",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.width(48.dp))
+            IconButton(onClick = {
+                Toast.makeText(context, "Secure encrypted UPI peer link active", Toast.LENGTH_SHORT).show()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Menu",
+                    tint = Color.White
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Subscription/payment item tabs: 9, 19, 100, 500, 1000 RS
+        // Subscription/payment item tabs: 30, 100, 250, 500, 1000, 2500 RS
         Text(
             text = "SELECT COIN PACK / OFFER",
             color = Color.LightGray,
@@ -1805,18 +2105,24 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             PremiumOptionCard(
-                title = "9 RS Option",
-                subtitle = "Ad-free experience\n+ 15 Coins",
-                selected = amount == 9,
-                onClick = { viewModel.updatePayAmount(9) },
+                title = "30 RS Starter",
+                subtitle = "70 Coins Pack\n+ Advanced Filters",
+                selected = amount == 30,
+                onClick = {
+                    viewModel.updatePayAmount(30)
+                    triggerUpiPayment(30)
+                },
                 modifier = Modifier.weight(1f)
             )
 
             PremiumOptionCard(
-                title = "19 RS Option",
-                subtitle = "79 Coins Pack\n+ Girls Priority Match",
-                selected = amount == 19,
-                onClick = { viewModel.updatePayAmount(19) },
+                title = "100 RS Pack",
+                subtitle = "233 Coins Tier\n+ Girls Priority Match",
+                selected = amount == 100,
+                onClick = {
+                    viewModel.updatePayAmount(100)
+                    triggerUpiPayment(100)
+                },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -1830,33 +2136,58 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             PremiumOptionCard(
-                title = "100 RS Pack",
-                subtitle = "250 Coins Tier\n+ Full Filter Unlock",
-                selected = amount == 100,
-                onClick = { viewModel.updatePayAmount(100) },
+                title = "250 RS Value",
+                subtitle = "585 Coins Tier\n+ Global Access Unlock",
+                selected = amount == 250,
+                onClick = {
+                    viewModel.updatePayAmount(250)
+                    triggerUpiPayment(250)
+                },
                 modifier = Modifier.weight(1f)
             )
 
             PremiumOptionCard(
                 title = "500 RS Pack",
-                subtitle = "1399 Coins Tier\n+ VIP High Speed",
+                subtitle = "1170 Coins Tier\n+ VIP Turbo Connection",
                 selected = amount == 500,
-                onClick = { viewModel.updatePayAmount(500) },
+                onClick = {
+                    viewModel.updatePayAmount(500)
+                    triggerUpiPayment(500)
+                },
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        PremiumOptionCard(
-            title = "1000 RS Ultra Vip",
-            subtitle = "3000 Coins King Tier\n+ Golden Frame & Lifetime Badge",
-            selected = amount == 1000,
-            onClick = { viewModel.updatePayAmount(1000) },
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-        )
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PremiumOptionCard(
+                title = "1000 RS Vip",
+                subtitle = "2350 Coins Tier\n+ Golden Profile View",
+                selected = amount == 1000,
+                onClick = {
+                    viewModel.updatePayAmount(1000)
+                    triggerUpiPayment(1000)
+                },
+                modifier = Modifier.weight(1f)
+            )
+
+            PremiumOptionCard(
+                title = "2500 RS Best Offer",
+                subtitle = "6000 Coins King Tier\n+ Lifetime Access",
+                selected = amount == 2500,
+                onClick = {
+                    viewModel.updatePayAmount(2500)
+                    triggerUpiPayment(2500)
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -1864,11 +2195,11 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
             // Gold sparkling confirmation badge
             SuccessPaymentCard(amount = amount, onClose = { viewModel.closePaymentScreen() })
         } else {
-            // Recreated UPI Screen centered nicely
+            // Recreated UPI Screen centered nicely with premium color matching GPay screenshot (Color(0xFF151821))
             Card(
-                colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF151821)),
                 border = BorderStroke(1.dp, GridBorder),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -1876,103 +2207,177 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Profile Uskha Billing
+                    // Premium design: Official Coin Receiver Wallet / UPI ID Header
                     Row(
-                        modifier = Modifier.padding(bottom = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 18.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF1B1E28))
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)), RoundedCornerShape(12.dp))
+                            .clickable {
+                                clipboardManager.setText(AnnotatedString("0naveen7290odk@fam"))
+                                Toast.makeText(context, "UPI ID Copied!", Toast.LENGTH_SHORT).show()
+                            }
+                            .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
-                                .background(NeonCyan),
+                                .background(NeonCyan.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("U", color = ObsidianBlack, fontWeight = FontWeight.Black)
+                            Icon(
+                                imageVector = Icons.Default.AccountBalanceWallet,
+                                contentDescription = "Coin Payment ID",
+                                tint = NeonCyan,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Uskha Gateway",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "RECEIVER UPI ID FOR COINS",
+                                color = Color.Gray,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.6.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "0naveen7290odk@fam",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
-                    // High fidelity QR code drawing
-                    UPIQrCodeRepresentation(amount = amount)
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(
-                        text = "Scan to pay with any UPI app",
-                        color = TextSecondary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Bank selection details
-                    Row(
-                        modifier = Modifier
-                            .fillHeaderWidth(0.85f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(SurfaceCard)
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        // Small orange/gold bank logo representation
-                        Spacer(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFFFF6D00))
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Bank of Baroda 9688",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Copy ID field
-                    Row(
+                    // Selected Package info panel instead of QR
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                clipboardManager.setText(AnnotatedString("uskha.pay@oksbi"))
-                                Toast.makeText(context, "UPI ID Copied!", Toast.LENGTH_SHORT).show()
-                            },
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFF1B1E28))
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(16.dp))
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "UPI ID: uskha.pay@oksbi",
-                            color = TextAccent,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "ORDER VALUE",
+                                color = Color.Gray,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "₹$amount",
+                                color = Color.White,
+                                fontSize = 36.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Stars,
+                                    contentDescription = "Coins",
+                                    tint = NeonCyan,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "$coinCount Coins package will be unlocked",
+                                    color = Color.LightGray,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Primary Interactive CTA Button to trigger auto-launch
+                    Button(
+                        onClick = { triggerUpiPayment(amount) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        shape = RoundedCornerShape(27.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFA8C7FA),
+                            contentColor = Color(0xFF001D35)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "Copy",
-                            tint = NeonCyan,
-                            modifier = Modifier.size(13.dp)
+                            imageVector = Icons.Default.FlashOn,
+                            contentDescription = "Pay",
+                            tint = Color(0xFF001D35),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "⚡ PAY NOW VIA UPI APPS",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.5.sp
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Launches Google Pay, PhonePe, Paytm, or BHIM automatically.",
+                        color = Color.Gray,
+                        fontSize = 10.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Official Powered by UPI lockup
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 12.dp)
+            ) {
+                Text(
+                    text = "POWERED BY ",
+                    color = Color.Gray,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Light,
+                    letterSpacing = 0.5.sp
+                )
+                Text(
+                    text = "UPI",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = " ❯❯",
+                    color = Color(0xFF34A853),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Transaction ID paste field
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
@@ -2033,7 +2438,7 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Verifying Transaction Ledger...", fontWeight = FontWeight.Bold)
+                        Text("Verifying Transaction... Please Wait.", fontWeight = FontWeight.Bold)
                     } else {
                         Text("Activate Premium (${amount} RS)", fontWeight = FontWeight.Black)
                     }
@@ -2481,7 +2886,7 @@ fun VideoXPlaceholder(partnerName: String, gender: String) {
 fun CameraXFeedPreview(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isCameraAvailable by remember { mutableStateOf(true) }
+    var isCameraAvailable by remember { mutableStateOf(false) }
 
     val previewView = remember {
         PreviewView(context).apply {
@@ -2496,35 +2901,40 @@ fun CameraXFeedPreview(modifier: Modifier = Modifier) {
             isCameraAvailable = false
             return@LaunchedEffect
         }
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        cameraProviderFuture.addListener({
-            try {
-                val cameraProvider = cameraProviderFuture.get()
-                val cameraSelector = when {
-                    cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) -> CameraSelector.DEFAULT_FRONT_CAMERA
-                    cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) -> CameraSelector.DEFAULT_BACK_CAMERA
-                    else -> null
-                }
-                if (cameraSelector != null) {
-                    val preview = CameraPreviewUseCase.Builder().build().apply {
-                        setSurfaceProvider(previewView.surfaceProvider)
+        try {
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+            cameraProviderFuture.addListener({
+                try {
+                    val cameraProvider = cameraProviderFuture.get()
+                    val cameraSelector = when {
+                        cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) -> CameraSelector.DEFAULT_FRONT_CAMERA
+                        cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) -> CameraSelector.DEFAULT_BACK_CAMERA
+                        else -> null
                     }
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        cameraSelector,
-                        preview
-                    )
-                    isCameraAvailable = true
-                } else {
+                    if (cameraSelector != null) {
+                        val preview = CameraPreviewUseCase.Builder().build().apply {
+                            setSurfaceProvider(previewView.surfaceProvider)
+                        }
+                        cameraProvider.unbindAll()
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            cameraSelector,
+                            preview
+                        )
+                        isCameraAvailable = true
+                    } else {
+                        isCameraAvailable = false
+                        Log.w("UskhaVideo", "No active camera sensor found.")
+                    }
+                } catch (e: Exception) {
                     isCameraAvailable = false
-                    Log.w("UskhaVideo", "No active camera sensor found.")
+                    Log.e("UskhaVideo", "Failed to bind camera lifecycle", e)
                 }
-            } catch (e: Exception) {
-                isCameraAvailable = false
-                Log.e("UskhaVideo", "Failed to bind camera lifecycle", e)
-            }
-        }, ContextCompat.getMainExecutor(context))
+            }, ContextCompat.getMainExecutor(context))
+        } catch (e: Exception) {
+            isCameraAvailable = false
+            Log.e("UskhaVideo", "Failed to obtain ProcessCameraProvider", e)
+        }
     }
 
     if (isCameraAvailable) {
@@ -2755,6 +3165,7 @@ fun CyberPrivacyMaskOverlay(modifier: Modifier = Modifier) {
 fun DashboardHeader(
     onOpenPremium: () -> Unit,
     onOpenSafety: () -> Unit,
+    onOpenSettings: () -> Unit,
     coins: Int,
     isVIP: Boolean
 ) {
@@ -2848,6 +3259,23 @@ fun DashboardHeader(
                     modifier = Modifier.size(18.dp)
                 )
             }
+
+            // Settings icon
+            IconButton(
+                onClick = onOpenSettings,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(SurfaceCard)
+                    .size(36.dp)
+                    .testTag("settings_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = AccentTeal,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }
@@ -2931,43 +3359,76 @@ fun DashboardMatchOrb(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = onStartText,
+                    onClick = {
+                        try {
+                            val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                            toneG.startTone(android.media.ToneGenerator.TONE_CDMA_PIP, 45)
+                        } catch (e: Exception) {}
+                        onStartText()
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = ObsidianBlack),
-                    border = BorderStroke(1.dp, NeonCyan),
-                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.5.dp, Brush.horizontalGradient(listOf(NeonCyan, AccentTeal))),
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .height(64.dp)
+                        .height(68.dp)
                         .testTag("start_text_chat_button")
                 ) {
-                    Icon(Icons.Default.Chat, contentDescription = "Text chat", tint = NeonCyan, modifier = Modifier.size(18.dp))
+                    Icon(
+                        imageVector = Icons.Default.Chat, 
+                        contentDescription = "Text chat", 
+                        tint = NeonCyan, 
+                        modifier = Modifier.size(18.dp)
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
                     Column(horizontalAlignment = Alignment.Start) {
-                        Text("Secure Text", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        Text("3 Coins", color = NeonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("Secure Text", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("3 Coins", color = NeonCyan, fontSize = 10.sp, fontWeight = FontWeight.Black)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(NeonCyan)
+                            )
+                        }
                     }
                 }
 
                 Button(
-                    onClick = onStartVideo,
+                    onClick = {
+                        try {
+                            val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                            toneG.startTone(android.media.ToneGenerator.TONE_CDMA_PIP, 65)
+                        } catch (e: Exception) {}
+                        onStartVideo()
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = ObsidianBlack),
-                    border = BorderStroke(1.dp, NeonPink),
-                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.5.dp, Brush.horizontalGradient(listOf(NeonPink, Color(0xFFFF4081)))),
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .height(64.dp)
+                        .height(68.dp)
                         .testTag("start_video_chat_button")
                 ) {
-                    Icon(Icons.Default.Videocam, contentDescription = "Video call", tint = NeonPink, modifier = Modifier.size(18.dp))
+                    Icon(
+                        imageVector = Icons.Default.Videocam, 
+                        contentDescription = "Video call", 
+                        tint = NeonPink, 
+                        modifier = Modifier.size(18.dp)
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
                     Column(horizontalAlignment = Alignment.Start) {
-                        Text("Video Match", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        Text(
-                            text = if (!prefs.hasUsedFreeVideoCall) "1st Call FREE!" else "15 Coins",
-                            color = if (!prefs.hasUsedFreeVideoCall) Color(0xFF00FF66) else NeonPink,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("Video Match", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (!prefs.hasUsedFreeVideoCall) "FREE TRIAL!" else "15 Coins",
+                                color = if (!prefs.hasUsedFreeVideoCall) Color(0xFF00FF66) else NeonPink,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
                     }
                 }
             }
@@ -2991,12 +3452,6 @@ fun StatsRow(prefs: UserPreferences, matchesCount: Int) {
             title = "Flag Alerts",
             value = "${prefs.completedReportsCount}",
             accentColor = NeonPink,
-            modifier = Modifier.weight(1f)
-        )
-        StatBox(
-            title = "Network ID",
-            value = "BOB-${prefs.id}",
-            accentColor = BrightViolet,
             modifier = Modifier.weight(1f)
         )
     }
@@ -3060,17 +3515,21 @@ fun PremiumOptionCard(
                     modifier = Modifier.size(18.dp)
                 )
 
-                if (title.contains("Girls") || title.contains("19")) {
+                if (title.contains("30")) {
                     Badge(containerColor = NeonPink) {
-                        Text("HOT", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                        Text("STARTER", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 4.dp))
                     }
                 } else if (title.contains("100")) {
                     Badge(containerColor = NeonCyan) {
                         Text("POPULAR", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 4.dp))
                     }
-                } else if (title.contains("500")) {
+                } else if (title.contains("2500")) {
+                    Badge(containerColor = Color(0xFF00FF66)) {
+                        Text("BEST OFFER", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                    }
+                } else if (title.contains("500") || title.contains("250")) {
                     Badge(containerColor = Color(0xFFFFD700)) {
-                        Text("BEST VALUE", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                        Text("RECOMMENDED", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 9.sp, modifier = Modifier.padding(horizontal = 4.dp))
                     }
                 } else if (title.contains("1000")) {
                     Badge(containerColor = Color(0xFFFFD700)) {
@@ -3226,111 +3685,220 @@ fun SuccessPaymentCard(amount: Int, onClose: () -> Unit) {
     }
 }
 
+val NAVEEN_QR_GRID = listOf(
+    "111111100010110001111111",
+    "100000101101010011000001",
+    "101110100011010101011101",
+    "101110100111111001011101",
+    "101110101100010011011101",
+    "100000100011010101000001",
+    "111111101010101010111111",
+    "000000001101111000000000",
+    "110111110011000110010100",
+    "001011001000101101010111",
+    "101001011110110111100110",
+    "011110010001011000011101",
+    "110011011110111101101001",
+    "000000001111000111001010",
+    "111111101100011001101111",
+    "100000100111010010101100",
+    "101110101011011001001101",
+    "101110100001100111100101",
+    "101110101100010101111011",
+    "100000101010110010001111",
+    "111111101111011010011101"
+)
+
+fun saveQrCodeToGallery(context: Context, amount: Int, qrGrid: List<String>): String? {
+    try {
+        val size = 512
+        val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        
+        // Draw white background
+        val bgPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            style = android.graphics.Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, size.toFloat(), size.toFloat(), bgPaint)
+        
+        // Draw black QR modules
+        val cellPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.BLACK
+            style = android.graphics.Paint.Style.FILL
+        }
+        
+        val rows = qrGrid.size
+        val cols = qrGrid[0].length
+        val cw = size.toFloat() / cols
+        val ch = size.toFloat() / rows
+        
+        for (r in 0 until rows) {
+            val row = qrGrid[r]
+            for (c in 0 until cols) {
+                if (row[c] == '1') {
+                    canvas.drawRect(
+                        c * cw,
+                        r * ch,
+                        (c + 1) * cw + 0.5f,
+                        (r + 1) * ch + 0.5f,
+                        cellPaint
+                    )
+                }
+            }
+        }
+        
+        // Google Pay ribbon logo overlay in the center
+        val badgeRadius = size * 0.11f
+        val badgeCenter = size / 2f
+        
+        val badgePaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            style = android.graphics.Paint.Style.FILL
+            isAntiAlias = true
+        }
+        canvas.drawCircle(badgeCenter, badgeCenter, badgeRadius, badgePaint)
+        
+        val strokePaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.parseColor("#E0E0E0")
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 3f
+            isAntiAlias = true
+        }
+        canvas.drawCircle(badgeCenter, badgeCenter, badgeRadius, strokePaint)
+        
+        // Draw Google Pay colored sectors
+        val arcRect = android.graphics.RectF(
+            badgeCenter - badgeRadius * 0.7f,
+            badgeCenter - badgeRadius * 0.7f,
+            badgeCenter + badgeRadius * 0.7f,
+            badgeCenter + badgeRadius * 0.7f
+        )
+        
+        val redPaint = android.graphics.Paint().apply { color = android.graphics.Color.parseColor("#EA4335"); style = android.graphics.Paint.Style.FILL; isAntiAlias = true }
+        val bluePaint = android.graphics.Paint().apply { color = android.graphics.Color.parseColor("#4285F4"); style = android.graphics.Paint.Style.FILL; isAntiAlias = true }
+        val yellowPaint = android.graphics.Paint().apply { color = android.graphics.Color.parseColor("#FBBC05"); style = android.graphics.Paint.Style.FILL; isAntiAlias = true }
+        val greenPaint = android.graphics.Paint().apply { color = android.graphics.Color.parseColor("#34A853"); style = android.graphics.Paint.Style.FILL; isAntiAlias = true }
+        
+        canvas.drawArc(arcRect, -135f, 90f, true, redPaint)
+        canvas.drawArc(arcRect, -45f, 90f, true, bluePaint)
+        canvas.drawArc(arcRect, 45f, 90f, true, yellowPaint)
+        canvas.drawArc(arcRect, 135f, 90f, true, greenPaint)
+        
+        // Draw white mask hole in the center
+        val maskPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            style = android.graphics.Paint.Style.FILL
+            isAntiAlias = true
+        }
+        canvas.drawCircle(badgeCenter, badgeCenter, badgeRadius * 0.35f, maskPaint)
+
+        // Save using standard Scoped Storage
+        val filename = "Uskha_Payment_QR_${amount}RS.png"
+        val cr = context.contentResolver
+        val contentValues = android.content.ContentValues().apply {
+            put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, filename)
+            put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "image/png")
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_PICTURES + "/Uskha")
+                put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+        }
+        
+        val imageUri = cr.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        if (imageUri != null) {
+            cr.openOutputStream(imageUri).use { out ->
+                if (out != null) {
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+                }
+            }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                contentValues.clear()
+                contentValues.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+                cr.update(imageUri, contentValues, null, null)
+            }
+            return "QR downloaded! Saved to Gallery under Pictures/Uskha/$filename"
+        }
+    } catch (e: Exception) {
+        Log.e("Uskha", "save Qr err", e)
+        return "Failed: ${e.localizedMessage}"
+    }
+    return null
+}
+
 @Composable
 fun UPIQrCodeRepresentation(amount: Int) {
-    // Beautiful replica of Google Pay centered QR frame
+    // Elegant, high-fidelity native recreation of a professional 24x21 QR code
     Box(
         modifier = Modifier
-            .size(190.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .size(200.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .padding(14.dp),
+            .padding(12.dp),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val s = size.width
-            val stroke = 3.dp.toPx()
-
-            // Draw QR corner blocks (outer black boxes)
-            drawRoundRect(
-                color = Color.Black,
-                topLeft = Offset(0f, 0f),
-                size = Size(s * 0.28f, s * 0.28f),
-                cornerRadius = CornerRadius(4.dp.toPx())
-            )
-            drawRoundRect(
-                color = Color.White,
-                topLeft = Offset(stroke, stroke),
-                size = Size(s * 0.28f - stroke * 2, s * 0.28f - stroke * 2),
-                cornerRadius = CornerRadius(3.dp.toPx())
-            )
-            drawRoundRect(
-                color = Color.Black,
-                topLeft = Offset(stroke * 2, stroke * 2),
-                size = Size(s * 0.28f - stroke * 4, s * 0.28f - stroke * 4),
-                cornerRadius = CornerRadius(2.dp.toPx())
-            )
-
-            // Top-right block
-            drawRoundRect(
-                color = Color.Black,
-                topLeft = Offset(s * 0.72f, 0f),
-                size = Size(s * 0.28f, s * 0.28f),
-                cornerRadius = CornerRadius(4.dp.toPx())
-            )
-            drawRoundRect(
-                color = Color.White,
-                topLeft = Offset(s * 0.72f + stroke, stroke),
-                size = Size(s * 0.28f - stroke * 2, s * 0.28f - stroke * 2),
-                cornerRadius = CornerRadius(3.dp.toPx())
-            )
-            drawRoundRect(
-                color = Color.Black,
-                topLeft = Offset(s * 0.72f + stroke * 2, stroke * 2),
-                size = Size(s * 0.28f - stroke * 4, s * 0.28f - stroke * 4),
-                cornerRadius = CornerRadius(2.dp.toPx())
-            )
-
-            // Bottom-left block
-            drawRoundRect(
-                color = Color.Black,
-                topLeft = Offset(0f, s * 0.72f),
-                size = Size(s * 0.28f, s * 0.28f),
-                cornerRadius = CornerRadius(4.dp.toPx())
-            )
-            drawRoundRect(
-                color = Color.White,
-                topLeft = Offset(stroke, s * 0.72f + stroke),
-                size = Size(s * 0.28f - stroke * 2, s * 0.28f - stroke * 2),
-                cornerRadius = CornerRadius(3.dp.toPx())
-            )
-            drawRoundRect(
-                color = Color.Black,
-                topLeft = Offset(stroke * 2, s * 0.72f + stroke * 2),
-                size = Size(s * 0.28f - stroke * 4, s * 0.28f - stroke * 4),
-                cornerRadius = CornerRadius(2.dp.toPx())
-            )
-
-            // Mock randomized QR dot structures
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.35f, s * 0.10f), size = Size(s * 0.12f, s * 0.05f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.52f, s * 0.05f), size = Size(s * 0.08f, s * 0.15f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.38f, s * 0.24f), size = Size(s * 0.18f, s * 0.06f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.12f, s * 0.35f), size = Size(s * 0.05f, s * 0.12f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.05f, s * 0.52f), size = Size(s * 0.15f, s * 0.08f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.24f, s * 0.38f), size = Size(s * 0.06f, s * 0.18f))
-
-            // Center details
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.35f, s * 0.45f), size = Size(s * 0.3f, s * 0.22f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.45f, s * 0.68f), size = Size(s * 0.18f, s * 0.14f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.72f, s * 0.35f), size = Size(s * 0.22f, s * 0.12f))
-            drawRect(color = Color.Black, topLeft = Offset(s * 0.68f, s * 0.52f), size = Size(s * 0.14f, s * 0.18f))
+            val rows = NAVEEN_QR_GRID.size
+            val cols = NAVEEN_QR_GRID[0].length
+            val cw = size.width / cols
+            val ch = size.height / rows
+            
+            // Draw each black block sharply
+            for (r in 0 until rows) {
+                val row = NAVEEN_QR_GRID[r]
+                for (c in 0 until cols) {
+                    if (row[c] == '1') {
+                        drawRect(
+                            color = Color.Black,
+                            topLeft = Offset(c * cw, r * ch),
+                            size = Size(cw + 0.5f, ch + 0.5f)
+                        )
+                    }
+                }
+            }
         }
 
-        // Draw Google Pay visual logo icon in the center exactly as shown
+        // Draw Google Pay visual logo icon in the center exactly as shown in screenshot
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(38.dp)
                 .clip(CircleShape)
                 .background(Color.White)
-                .border(BorderStroke(1.dp, Color.LightGray), CircleShape),
+                .border(BorderStroke(1.dp, Color(0xFFE0E0E0)), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            // Drawn Google Pay colored logo representation
-            Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
-                Box(modifier = Modifier.size(6.dp, 12.dp).background(Color(0xFFEA4335))) // Red
-                Box(modifier = Modifier.size(6.dp, 12.dp).background(Color(0xFF4285F4))) // Blue
-                Box(modifier = Modifier.size(6.dp, 12.dp).background(Color(0xFFFBBC05))) // Yellow
-                Box(modifier = Modifier.size(6.dp, 12.dp).background(Color(0xFF34A853))) // Green
+            Canvas(modifier = Modifier.size(24.dp)) {
+                val r = size.width / 2
+                val arcRect = androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height)
+
+                // Colored ribbon segments
+                drawArc(
+                    color = Color(0xFFEA4335), // Red
+                    startAngle = -135f,
+                    sweepAngle = 90f,
+                    useCenter = true
+                )
+                drawArc(
+                    color = Color(0xFF4285F4), // Blue
+                    startAngle = -45f,
+                    sweepAngle = 90f,
+                    useCenter = true
+                )
+                drawArc(
+                    color = Color(0xFFFBBC05), // Yellow
+                    startAngle = 45f,
+                    sweepAngle = 90f,
+                    useCenter = true
+                )
+                drawArc(
+                    color = Color(0xFF34A853), // Green
+                    startAngle = 135f,
+                    sweepAngle = 90f,
+                    useCenter = true
+                )
+
+                // Soft central doughnut ring
+                drawCircle(color = Color.White, radius = r * 0.45f)
             }
         }
     }
@@ -3439,3 +4007,540 @@ private fun Modifier.fillHeaderWidth(fraction: Float = 1f): Modifier = this.fill
 
 private val OberonPink = Color(0xFFFF85A1)
 private val OberonCyan = Color(0xFFE0FFFF)
+
+@Composable
+fun SettingsScreen(viewModel: UskhaViewModel) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+
+    val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
+    val selectedLanguage by viewModel.selectedLanguage.collectAsStateWithLifecycle()
+    val isConnectSoundEnabled by viewModel.isConnectSoundEnabled.collectAsStateWithLifecycle()
+    val isDisconnectSoundEnabled by viewModel.isDisconnectSoundEnabled.collectAsStateWithLifecycle()
+    val audioVideoQuality by viewModel.audioVideoQuality.collectAsStateWithLifecycle()
+
+    val indianLanguages = remember {
+        listOf(
+            "English", 
+            "Hindi (हिन्दी)", 
+            "Tamil (தமிழ்)", 
+            "Malayalam (മലയാളം)", 
+            "Kannada (കന്നඩ)", 
+            "Telugu (తెലുगु)", 
+            "Bengali (বাংলা)", 
+            "Marathi (मराठी)", 
+            "Gujarati (ગુજરાતી)", 
+            "Punjabi (ਪੰਜਾਬੀ)", 
+            "Urdu (اردו)"
+        )
+    }
+
+    Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { viewModel.navigateTo(UskhaScreen.Dashboard) },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .size(38.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back To Dashboard",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Text(
+                    text = "Preferences & Help",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // HELP & SUPPORT PANEL
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                ),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = "Help Mail",
+                            tint = NeonPink,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "24/7 Dedicated Help & Support",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "For queries regarding payment verifications, reports, or privacy, contact our team directly at the support mail listed below.",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Support mail row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "gojo83472@gmail.com",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = NeonCyan
+                        )
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            // Copy button
+                            IconButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString("gojo83472@gmail.com"))
+                                    Toast.makeText(context, "Support Email copied!", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.size(30.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy Support Email",
+                                    tint = AccentTeal,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+
+                            // Email client button
+                            IconButton(
+                                onClick = {
+                                    try {
+                                        val intent = android.content.Intent(android.content.Intent.ACTION_SENDTO).apply {
+                                            data = android.net.Uri.parse("mailto:gojo83472@gmail.com")
+                                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Uskha Support Inquiry")
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "No email client found.", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.size(30.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.OpenInNew,
+                                    contentDescription = "Open Email App",
+                                    tint = BrightViolet,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // THEME CHOICE CONTROL
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "App Theme Vibe",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Dark Theme option
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isDarkTheme) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .border(
+                                    BorderStroke(
+                                        if (isDarkTheme) 2.dp else 1.dp, 
+                                        if (isDarkTheme) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                    ),
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .clickable { viewModel.setDarkTheme(true) }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DarkMode,
+                                contentDescription = "Dark Mode",
+                                tint = if (isDarkTheme) NeonCyan else Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Neon Dark",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+
+                        // Light Theme option
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (!isDarkTheme) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .border(
+                                    BorderStroke(
+                                        if (!isDarkTheme) 2.dp else 1.dp, 
+                                        if (!isDarkTheme) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                    ),
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .clickable { viewModel.setDarkTheme(false) }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LightMode,
+                                contentDescription = "Light Mode",
+                                tint = if (!isDarkTheme) Color(0xFFF57C00) else Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Light Glow",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+                }
+            }
+
+            // AUDIO/VIDEO PROFILE COMFORT
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Real-time Connect Protocol",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Perfect Audio & Video high-definition profiles for optimal clarity.",
+                        fontSize = 11.sp,
+                        color = TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val qualities = listOf(
+                        "Perfect HD Stereo" to "Crystal clear voice with AI echo suppression & High Definition feed.",
+                        "Ultra Crisp Voice" to "Focuses premium bandwidth on voices for dense environments.",
+                        "Standard Eco" to "Optimized for erratic network coverage to keep signals steady."
+                    )
+
+                    qualities.forEach { (title, desc) ->
+                        val isSelected = audioVideoQuality == title
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent)
+                                .border(
+                                    BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color.Transparent),
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable { viewModel.setAudioVideoQuality(title) }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = { viewModel.setAudioVideoQuality(title) }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = title,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = desc,
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // INDIAN REGIONAL LANGUAGES LIST
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Translate,
+                            contentDescription = "Language Option",
+                            tint = AccentTeal,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Regional Language Target",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Uskha matches matching targets speaking similar regional Indian dialects.",
+                        fontSize = 11.sp,
+                        color = TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Render languages as scrollable flow rows, wrapped nicely
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        indianLanguages.chunked(2).forEach { pair ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                pair.forEach { language ->
+                                    val isSelected = selectedLanguage == language
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                            .border(
+                                                BorderStroke(
+                                                    if (isSelected) 1.5.dp else 1.dp,
+                                                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                                ),
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .clickable { viewModel.setLanguage(language) }
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = language,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
+                                            if (isSelected) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CheckCircle,
+                                                    contentDescription = "Selected",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                // Fill dummy cell if odd elements lists
+                                if (pair.size < 2) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // SIGNAL & SOUND EFFECT CUSTOMIZER
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.VolumeUp,
+                            contentDescription = "Sound customizations",
+                            tint = BrightViolet,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Call Connect sound preferences",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Connect Sound Switch
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Connection Alert Tone",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = "Plays a gentle high-pitched beep when matching succeeds.",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                        Switch(
+                            checked = isConnectSoundEnabled,
+                            onCheckedChange = { viewModel.setConnectSoundEnabled(it) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Disconnect Sound Switch
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Disconnection Alert Tone",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = "Plays a discrete system alert when active call is terminated.",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                        Switch(
+                            checked = isDisconnectSoundEnabled,
+                            onCheckedChange = { viewModel.setDisconnectSoundEnabled(it) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Test Tones trigger Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = { viewModel.playConnectSound() },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = "Play", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Test Connect Code", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = { viewModel.playDisconnectSound() },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = "Play", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Test Leave Tone", fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Uskha App v2.4 • Made with Love in India",
+                    fontSize = 11.sp,
+                    color = TextAccent
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
