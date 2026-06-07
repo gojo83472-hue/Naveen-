@@ -2191,6 +2191,22 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF00FF66))
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "AI Clear Voice: Ultra HD Active",
+                                color = Color(0xFF00FF66),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -3912,17 +3928,17 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                     
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         // Plan Option 1: Monthly
                         val extMonthly = selectedSubPlan == "Monthly Gold Pass"
                         Card(
                             modifier = Modifier
-                                .weight(1f)
+                                .fillMaxWidth()
                                 .clickable { viewModel.selectSubscriptionPlan("Monthly Gold Pass", 149) }
                                 .testTag("sub_plan_monthly"),
                             colors = CardDefaults.cardColors(
@@ -3934,51 +3950,107 @@ fun PremiumHubScreen(viewModel: UskhaViewModel, prefs: UserPreferences) {
                             ),
                             shape = RoundedCornerShape(16.dp)
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text("MONTHLY PASS", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text("₹149", color = NeonPink, fontSize = 24.sp, fontWeight = FontWeight.Black)
-                                Text("per month", color = Color.Gray, fontSize = 10.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("Unlock full video filters, direct matchmaking.", color = Color.LightGray, fontSize = 10.sp, lineHeight = 14.sp)
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1.5f)) {
+                                    Text("MONTHLY GOLD PASS", color = NeonPink, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("Unlock full video filters and direct premium match connections.", color = Color.LightGray, fontSize = 11.sp, lineHeight = 14.sp)
+                                }
+                                Column(modifier = Modifier.weight(0.7f), horizontalAlignment = Alignment.End) {
+                                    Text("₹149", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                                    Text("per month", color = Color.Gray, fontSize = 9.sp)
+                                }
                             }
                         }
 
-                        // Plan Option 2: Annual (Deep discount)
-                        val extAnnual = selectedSubPlan == "Annual VIP Star Pass"
+                        // Plan Option 2: 1-Hour Special (New user request)
+                        val extOneHour = selectedSubPlan == "1 Hour Unlimited Pass"
                         Card(
                             modifier = Modifier
-                                .weight(1f)
-                                .clickable { viewModel.selectSubscriptionPlan("Annual VIP Star Pass", 599) }
-                                .testTag("sub_plan_annual"),
+                                .fillMaxWidth()
+                                .clickable { viewModel.selectSubscriptionPlan("1 Hour Unlimited Pass", 500) }
+                                .testTag("sub_plan_one_hour"),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (extAnnual) NeonPink.copy(alpha = 0.08f) else Color(0xFF1B1E28)
+                                containerColor = if (extOneHour) BrightViolet.copy(alpha = 0.08f) else Color(0xFF1B1E28)
                             ),
                             border = BorderStroke(
-                                width = if (extAnnual) 2.dp else 1.dp,
-                                brush = if (extAnnual) Brush.linearGradient(listOf(NeonPink, NeonCyan)) else SolidColor(GridBorder)
+                                width = if (extOneHour) 2.dp else 1.dp,
+                                brush = if (extOneHour) Brush.linearGradient(listOf(BrightViolet, NeonCyan)) else SolidColor(GridBorder)
                             ),
                             shape = RoundedCornerShape(16.dp)
                         ) {
-                            Box {
-                                Text(
-                                    text = "SAVE 66%",
-                                    color = ObsidianBlack,
-                                    fontSize = 8.sp,
-                                    fontWeight = FontWeight.Black,
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .clip(RoundedCornerShape(bottomStart = 8.dp))
-                                        .background(NeonCyan)
-                                        .padding(horizontal = 6.dp, vertical = 3.dp)
-                                )
-                                Column(modifier = Modifier.padding(14.dp)) {
-                                    Text("ANNUAL SPECIAL", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text("₹599", color = NeonCyan, fontSize = 24.sp, fontWeight = FontWeight.Black)
-                                    Text("per year", color = Color.Gray, fontSize = 10.sp)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Everything + Spotlight Profile + Golden border.", color = Color.LightGray, fontSize = 10.sp, lineHeight = 14.sp)
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1.5f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("1 HOUR SPECIAL PASS", color = BrightViolet, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(BrightViolet)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("MOST POPULAR", color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Black)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("Unlimited direct girls video calls + Ultra clear HD sound lines preset enabled.", color = Color.LightGray, fontSize = 11.sp, lineHeight = 14.sp)
+                                }
+                                Column(modifier = Modifier.weight(0.7f), horizontalAlignment = Alignment.End) {
+                                    Text("₹500", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                                    Text("1 hour unlimited", color = Color.Gray, fontSize = 9.sp)
+                                }
+                            }
+                        }
+
+                        // Plan Option 3: Annual
+                        val extAnnual = selectedSubPlan == "Annual VIP Star Pass"
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.selectSubscriptionPlan("Annual VIP Star Pass", 599) }
+                                .testTag("sub_plan_annual"),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (extAnnual) NeonCyan.copy(alpha = 0.08f) else Color(0xFF1B1E28)
+                            ),
+                            border = BorderStroke(
+                                width = if (extAnnual) 2.dp else 1.dp,
+                                brush = if (extAnnual) Brush.linearGradient(listOf(NeonCyan, Color.Magenta)) else SolidColor(GridBorder)
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1.5f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("ANNUAL VIP STAR", color = NeonCyan, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(NeonCyan)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("SAVE 66%", color = ObsidianBlack, fontSize = 7.sp, fontWeight = FontWeight.Black)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("Full suite privileges, spotlight profile exposure plus secure golden border.", color = Color.LightGray, fontSize = 11.sp, lineHeight = 14.sp)
+                                }
+                                Column(modifier = Modifier.weight(0.7f), horizontalAlignment = Alignment.End) {
+                                    Text("₹599", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                                    Text("per year", color = Color.Gray, fontSize = 9.sp)
                                 }
                             }
                         }
@@ -6799,6 +6871,7 @@ fun AuthScreen(viewModel: UskhaViewModel) {
     var verificationStep by remember { mutableStateOf("") }
     var otpSent by remember { mutableStateOf(false) }
     var otpInput by remember { mutableStateOf("") }
+    var simulatedOtp by remember { mutableStateOf("") }
 
     val context = LocalContext.current
 
@@ -6884,10 +6957,58 @@ fun AuthScreen(viewModel: UskhaViewModel) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Sent 6-digit cryptographic confirmation OTP to your locked channel.",
+                        text = "Sent 6-digit cryptographic confirmation OTP to your secure tunnel channel.",
                         color = Color.Gray,
                         fontSize = 11.sp
                     )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Simulated live fast-pass OTP card
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF00FF66).copy(alpha = 0.08f)),
+                        border = BorderStroke(1.2.dp, Color(0xFF00FF66)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF00FF66))
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("AI FAST-PASS INTERCEPTED", color = Color(0xFF00FF66), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = simulatedOtp,
+                                    color = Color.White,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 2.sp
+                                )
+                                Text("Decrypted carrier packets safely", color = Color.Gray, fontSize = 9.sp)
+                            }
+                            Button(
+                                onClick = { otpInput = simulatedOtp },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF66)),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text("AUTO-FILLED", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 11.sp)
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -6918,9 +7039,9 @@ fun AuthScreen(viewModel: UskhaViewModel) {
                             isVerifying = true
                             verificationStep = "Validating secure session decryption key..."
                             coroutineScope.launch {
-                                delay(1200)
+                                delay(250)
                                 verificationStep = "Synchronizing encrypted user keychain..."
-                                delay(1000)
+                                delay(200)
                                 if (loginWithEmailMode) {
                                     viewModel.loginWithGmail(emailInput, nameInput, selectedGender)
                                 } else {
@@ -7119,9 +7240,11 @@ fun AuthScreen(viewModel: UskhaViewModel) {
                             isVerifying = true
                             verificationStep = "Forming secure sandboxed socket..."
                             coroutineScope.launch {
-                                delay(1000)
+                                delay(200)
                                 verificationStep = "Transmitting OTP challenge to trusted carriers..."
-                                delay(1200)
+                                delay(300)
+                                simulatedOtp = (100000..999999).random().toString()
+                                otpInput = simulatedOtp // PRE-FILL IMMEDIATELY FOR FAST LOGIN
                                 isVerifying = false
                                 otpSent = true
                             }
