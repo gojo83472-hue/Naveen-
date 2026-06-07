@@ -5,6 +5,7 @@ import com.example.data.model.ChatMessage
 import com.example.data.model.MatchHistory
 import com.example.data.model.ModerationReport
 import com.example.data.model.UserPreferences
+import com.example.data.model.WalletTransaction
 import kotlinx.coroutines.flow.Flow
 
 class UskhaRepository(private val dao: UskhaDao) {
@@ -12,6 +13,7 @@ class UskhaRepository(private val dao: UskhaDao) {
     val userPreferencesFlow: Flow<UserPreferences?> = dao.getUserPreferencesFlow()
     val matchHistoryFlow: Flow<List<MatchHistory>> = dao.getMatchHistoryFlow()
     val reportsFlow: Flow<List<ModerationReport>> = dao.getModerationReportsFlow()
+    val walletTransactionsFlow: Flow<List<WalletTransaction>> = dao.getWalletTransactionsFlow()
 
     fun getChatMessagesFlow(matchId: Int): Flow<List<ChatMessage>> = dao.getChatMessagesFlow(matchId)
 
@@ -19,9 +21,23 @@ class UskhaRepository(private val dao: UskhaDao) {
         var prefs = dao.getUserPreferencesDirect()
         if (prefs == null) {
             prefs = UserPreferences()
-            dao.saveUserPreferences(prefs)
         }
-        return prefs
+        var updated = false
+        var nextPrefs = prefs
+        if (nextPrefs.selfUserId.isEmpty()) {
+            val randomId = "USKHA-" + (10000..99999).random()
+            nextPrefs = nextPrefs.copy(selfUserId = randomId)
+            updated = true
+        }
+        if (nextPrefs.selfInviteCode.isEmpty()) {
+            val randomInviteCode = "USK-" + ('A'..'Z').shuffled().take(5).joinToString("")
+            nextPrefs = nextPrefs.copy(selfInviteCode = randomInviteCode)
+            updated = true
+        }
+        if (updated || prefs == null) {
+            dao.saveUserPreferences(nextPrefs)
+        }
+        return nextPrefs
     }
 
     suspend fun saveUserPreferences(preferences: UserPreferences) {
@@ -86,5 +102,9 @@ class UskhaRepository(private val dao: UskhaDao) {
         // Increment reported count in preferences
         val prefs = getUserPreferencesDirect()
         dao.saveUserPreferences(prefs.copy(completedReportsCount = prefs.completedReportsCount + 1))
+    }
+
+    suspend fun insertWalletTransaction(transaction: WalletTransaction) {
+        dao.insertWalletTransaction(transaction)
     }
 }

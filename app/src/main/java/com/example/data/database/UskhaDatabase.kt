@@ -8,15 +8,17 @@ import com.example.data.model.ChatMessage
 import com.example.data.model.MatchHistory
 import com.example.data.model.ModerationReport
 import com.example.data.model.UserPreferences
+import com.example.data.model.WalletTransaction
 
 @Database(
     entities = [
         UserPreferences::class,
         MatchHistory::class,
         ChatMessage::class,
-        ModerationReport::class
+        ModerationReport::class,
+        WalletTransaction::class
     ],
-    version = 2,
+    version = 7,
     exportSchema = false
 )
 abstract class UskhaDatabase : RoomDatabase() {

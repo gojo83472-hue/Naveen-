@@ -5,6 +5,7 @@ import com.example.data.model.ChatMessage
 import com.example.data.model.MatchHistory
 import com.example.data.model.ModerationReport
 import com.example.data.model.UserPreferences
+import com.example.data.model.WalletTransaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -51,4 +52,10 @@ interface UskhaDao {
 
     @Query("DELETE FROM chat_messages WHERE matchId = :matchId")
     suspend fun deleteChatByMatchId(matchId: Int)
+
+    @Query("SELECT * FROM wallet_transactions ORDER BY timestamp DESC")
+    fun getWalletTransactionsFlow(): Flow<List<WalletTransaction>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWalletTransaction(transaction: WalletTransaction): Long
 }

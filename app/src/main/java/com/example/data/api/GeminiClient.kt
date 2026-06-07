@@ -181,6 +181,93 @@ object GeminiClient {
         )
         return responses.random()
     }
+
+    /**
+     * Implements real-time AI content filtering to scan active video feed frames for safety violations.
+     * If bitmap is null (virtual environment), it simulates scanning based on mock flags.
+     */
+    suspend fun analyzeVideoFrame(
+        bitmap: android.graphics.Bitmap?,
+        isSimulationViolationActive: Boolean = false
+    ): ModerationResult {
+        if (isSimulationViolationActive) {
+            return ModerationResult(
+                isSafe = false,
+                reason = "AI Safety Violation: Prohibited adult/obscene activity detected on camera frame"
+            )
+        }
+
+        val apiKey = getApiKey()
+        if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
+            Log.e(TAG, "Gemini API key is not configured for video frame analysis. Simulating safe stream.")
+            return ModerationResult(isSafe = true, reason = null)
+        }
+
+        if (bitmap == null) {
+            // Virtual/emulated backdrop with no camera feed active
+            return ModerationResult(isSafe = true, reason = null)
+        }
+
+        return try {
+            val base64Image = try {
+                val outputStream = java.io.ByteArrayOutputStream()
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, outputStream)
+                android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.NO_WRAP)
+            } catch (e: Exception) {
+                ""
+            }
+
+            if (base64Image.isEmpty()) {
+                return ModerationResult(isSafe = true, reason = null)
+            }
+
+            val prompt = """
+                You are a real-time safety filter AI for live video calls. Analyze the attached camera feed image/frame.
+                Verify alignment with strict safety standards. Flag:
+                1. Nudity, obscene exposure, sexualized physical posturing.
+                2. Visible real-world weapons (knives, firearms) pointing in threatening gesture.
+                3. Severe violence or blood.
+                4. Apparent self-harm action.
+                5. High-level illegal prohibited drugs.
+
+                Your response format MUST be strictly:
+                - If the image contains NO violations: SAFE
+                - If a violation is found, reply exactly: INAPPROPRIATE: [short reason detailing the violation]
+                Do not add any preamble, markdown code blocks, or extra text.
+            """.trimIndent()
+
+            val request = GeminiRequest(
+                contents = listOf(
+                    GeminiContent(
+                        parts = listOf(
+                            GeminiPart(text = prompt),
+                            GeminiPart(inlineData = GeminiInlineData(mimeType = "image/jpeg", data = base64Image))
+                        )
+                    )
+                ),
+                generationConfig = GeminiGenerationConfig(
+                    temperature = 0.2,
+                    maxOutputTokens = 60
+                )
+            )
+
+            val response = service.generateContent(apiKey, request)
+            val responseText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim() ?: "SAFE"
+            
+            if (responseText.startsWith("INAPPROPRIATE", ignoreCase = true)) {
+                val reason = responseText.substringAfter(":").trim()
+                ModerationResult(
+                    isSafe = false,
+                    reason = if (reason.isNotEmpty()) reason else "Inappropriate behavior flagged by real-time AI filter"
+                )
+            } else {
+                ModerationResult(isSafe = true, reason = null)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error performing Gemini video frame scanning", e)
+            ModerationResult(isSafe = true, reason = null) // Fallback to safe so network hiccups don't break genuine user sessions
+        }
+    }
 }
 
 data class ModerationResult(
