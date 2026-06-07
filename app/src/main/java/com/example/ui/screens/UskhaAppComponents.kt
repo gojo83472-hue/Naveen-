@@ -2173,13 +2173,13 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
                 ) {
                     Column(horizontalAlignment = Alignment.Start) {
                         Badge(
-                            containerColor = NeonPink,
+                            containerColor = Color(0xFFEC4899),
                             modifier = Modifier.padding(top = 2.dp)
                         ) {
                             Text(
                                 text = "LIVE STRANGER CONNECTED",
-                                color = ObsidianBlack,
-                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
@@ -2187,9 +2187,9 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Channel: $activeServerVal",
-                            color = NeonCyan,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2197,73 +2197,32 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF00FF66))
+                                    .background(Color(0xFF10B981))
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "AI Clear Voice: Ultra HD Active",
-                                color = Color(0xFF00FF66),
+                                text = "AI Clear Voice: Active",
+                                color = Color(0xFF10B981),
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Button(
-                            onClick = { viewModel.sendFriendRequestToPartner() },
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentTeal),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                            modifier = Modifier.testTag("add_friend_video_btn")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Add Friend",
-                                tint = ObsidianBlack,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Friend", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 11.sp)
-                        }
-
-                        IconButton(
-                            onClick = { viewModel.reportStranger("Harassment in Video Call") },
-                            modifier = Modifier.testTag("video_report_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = "Shield Report",
-                                tint = NeonPink
-                            )
-                        }
-
-                        Button(
-                            onClick = { viewModel.skipToNextPartner() },
-                            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                            modifier = Modifier.testTag("next_partner_video_btn")
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.SkipNext,
-                                    contentDescription = "Next Partner",
-                                    tint = ObsidianBlack,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Next", color = ObsidianBlack, fontWeight = FontWeight.Black, fontSize = 11.sp)
-                            }
-                        }
-
-                        Button(
-                            onClick = { viewModel.navigateTo(UskhaScreen.Dashboard) },
-                            colors = ButtonDefaults.buttonColors(containerColor = GridBorder),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text("Disconnect", color = Color.White, fontWeight = FontWeight.Bold)
-                        }
+                    Button(
+                        onClick = { viewModel.navigateTo(UskhaScreen.Dashboard) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Disconnect",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Disconnect", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                     }
                 }
             }
@@ -2519,111 +2478,72 @@ fun VideoChatScreen(viewModel: UskhaViewModel) {
             }
         }
 
-        // --- Gemini AI Shield Status HUD Bar ---
+        // --- Centralized Call Controls Panel ---
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp)
-                .fillMaxWidth(0.92f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(SurfaceDark.copy(alpha = 0.88f))
-                .border(
-                    BorderStroke(
-                        1.dp,
-                        if (isVideoSimulationViolationActive) NeonPink else NeonCyan.copy(alpha = 0.4f)
-                    ),
-                    RoundedCornerShape(16.dp)
-                )
-                .padding(14.dp)
-                .testTag("gemini_video_shield_hud")
+                .padding(bottom = 70.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color(0xFF1E1F22).copy(alpha = 0.95f))
+                .border(BorderStroke(1.5.dp, Color(0xFF374151)), RoundedCornerShape(28.dp))
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .testTag("centered_call_controls_dock")
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Add Friend button
+                Button(
+                    onClick = { viewModel.sendFriendRequestToPartner() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6)), // Secure Elegant blue
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                    modifier = Modifier.testTag("add_friend_video_btn")
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(if (isScanningVideoFrame) NeonCyan else Color(0xFF00FF66))
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Gemini Video Shield v2.5",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Badge(
-                        containerColor = if (isScanningVideoFrame) NeonCyan.copy(alpha = 0.15f) else Color(0xFF00FF66).copy(alpha = 0.1f)
-                    ) {
-                        Text(
-                            text = if (isScanningVideoFrame) "SCANNING FRAMES..." else "FEED ACTIVE • SECURE",
-                            color = if (isScanningVideoFrame) NeonCyan else Color(0xFF00FF66),
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Black,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Add Friend",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Add Friend", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
 
-                Text(
-                    text = "Real-time AI Content Filter is scanning camera frame arrays at 5s frequency. Nudity, violence, self-harm, or policy breaches trigger automatic instant disconnect.",
-                    color = TextSecondary,
-                    fontSize = 10.sp,
-                    lineHeight = 14.sp
-                )
-
-                Spacer(
+                // Small circular report button
+                IconButton(
+                    onClick = { viewModel.reportStranger("Harassment in Video Call") },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(GridBorder)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFEF4444).copy(alpha = 0.15f))
+                        .testTag("video_report_button")
                 ) {
-                    Column {
-                        Text(
-                            text = "AI Frame analysis:",
-                            color = TextAccent,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = if (isScanningVideoFrame) "SCANNING ELEMENTS..." else (videoScanVerdict ?: "SAFE"),
-                            color = if (isVideoSimulationViolationActive) NeonPink else Color(0xFF00FF66),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Shield,
+                        contentDescription = "Shield Report",
+                        tint = Color(0xFFEF4444),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
-                    // Toggle Button to quickly test safety violation with automated shutdown
-                    Button(
-                        onClick = { viewModel.toggleVideoSimulationViolation(!isVideoSimulationViolationActive) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isVideoSimulationViolationActive) NeonPink.copy(alpha = 0.25f) else GridBorder.copy(alpha = 0.5f)
-                        ),
-                        border = BorderStroke(1.dp, NeonPink),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier.testTag("simulate_nsfw_btn")
-                    ) {
-                        Text(
-                            text = if (isVideoSimulationViolationActive) "Stop simulation" else "Simulate NSFW Trigger",
-                            color = NeonPink,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                // Next Partner button
+                Button(
+                    onClick = { viewModel.skipToNextPartner() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)), // Soft emerald green
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                    modifier = Modifier.testTag("next_partner_video_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Next Partner",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Next Partner", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }
@@ -4753,15 +4673,15 @@ fun VideoXPlaceholder(partnerName: String, gender: String) {
                 .clip(CircleShape)
                 .background(
                     Brush.verticalGradient(
-                        if (gender == "Girl") listOf(NeonPink, OberonPink)
-                        else listOf(NeonCyan, OberonCyan)
+                        if (gender == "Girl") listOf(Color(0xFFEC4899), Color(0xFFF472B6))
+                        else listOf(Color(0xFF3B82F6), Color(0xFF60A5FA))
                     )
                 ),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 partnerName.take(1),
-                color = ObsidianBlack,
+                color = Color.White,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Black
             )
@@ -4776,7 +4696,7 @@ fun VideoXPlaceholder(partnerName: String, gender: String) {
         )
         Text(
             text = "Ultra-low latency connection established",
-            color = Color(0xFF00FF66),
+            color = Color(0xFF10B981),
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
             modifier = Modifier.padding(top = 4.dp)
