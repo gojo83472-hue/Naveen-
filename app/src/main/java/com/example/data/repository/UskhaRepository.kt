@@ -22,7 +22,7 @@ class UskhaRepository(private val dao: UskhaDao) {
         dao.insertMessage(message)
     }
 
-    suspend fun createInitialDataIfEmpty() {
+    suspend fun createInitialDataIfEmpty() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val currentProfile = dao.getProfileDirect()
         if (currentProfile == null) {
             dao.insertProfile(UserProfile(name = "Alex Mercer", email = "alex@uskha.com", unixUid = "889301824756", balance = 35.00))

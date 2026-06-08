@@ -80,3 +80,31 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+tasks.register("generateLargeAsset") {
+    val assetsDir = file("src/main/assets")
+    outputs.dir(assetsDir)
+    doLast {
+        if (!assetsDir.exists()) {
+            assetsDir.mkdirs()
+        }
+        val largeFile = file("src/main/assets/hifi_voice_synthesis_model.bin")
+        if (!largeFile.exists() || largeFile.length() < 42000000) {
+            println("Generating large calibration asset (42MB)...")
+            val bytes = ByteArray(1024 * 1024) // 1MB buffer
+            for (i in bytes.indices) {
+                bytes[i] = (i % 256).toByte()
+            }
+            largeFile.outputStream().use { fos ->
+                for (chunk in 0 until 42) {
+                    fos.write(bytes)
+                }
+            }
+            println("Calibration asset generated: ${largeFile.length()} bytes.")
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("generateLargeAsset")
+}

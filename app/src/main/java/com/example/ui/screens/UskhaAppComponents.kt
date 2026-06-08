@@ -101,7 +101,7 @@ fun MainDashboard(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DatingDarkBg)
+            .background(if (isDarkModeEnabled) DatingDarkBg else Color(0xFF1E222D))
     ) {
         Column(
             modifier = Modifier
