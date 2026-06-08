@@ -1,6 +1,6 @@
 {
   "name": "Uskha",
-  "description": "Premium 18+ anonymous chat & video match hub with smart AI content moderation, safety reporting, and streamlined payments.",
+  "description": "Premium 18+ anonymous chat & video match hub with high-contrast UI, simulated coin wallets, instant video call handshakes, and secure gateway overrides.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

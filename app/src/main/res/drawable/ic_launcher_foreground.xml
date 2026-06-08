@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Stylized U and K calligraphy ligature stroke with extreme elegance -->
+    <path
+        android:pathData="M32,44 L32,58 C32,68 48,68 48,58 L48,26"
+        android:strokeWidth="7.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <gradient
+            android:startX="32"
+            android:startY="26"
+            android:endX="48"
+            android:endY="68"
+            android:startColor="#FDA4AF"
+            android:endColor="#EC4899"
+            android:type="linear" />
+    </path>
+
+    <path
+        android:pathData="M48,48 C56,40 64,42 64,50 C64,54 58,56 48,56"
+        android:strokeWidth="7.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <gradient
+            android:startX="48"
+            android:startY="40"
+            android:endX="64"
+            android:endY="56"
+            android:startColor="#FDA4AF"
+            android:endColor="#EC4899"
+            android:type="linear" />
+    </path>
+
+    <path
+        android:pathData="M48,56 L64,68"
+        android:strokeWidth="7.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <gradient
+            android:startX="48"
+            android:startY="56"
+            android:endX="64"
+            android:endY="68"
+            android:startColor="#EC4899"
+            android:endColor="#BE185D"
+            android:type="linear" />
+    </path>
+</vector>
