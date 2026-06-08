@@ -5,49 +5,70 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     
-    <!-- Stylized U and K calligraphy ligature stroke with extreme elegance -->
+    <!-- Solid base black circle/shield background or layer accent -->
     <path
-        android:pathData="M32,44 L32,58 C32,68 48,68 48,58 L48,26"
-        android:strokeWidth="7.5"
+        android:pathData="M54,12 C77.2,12 96,30.8 96,54 C96,77.2 77.2,96 54,96 C30.8,96 12,77.2 12,54 C12,30.8 30.8,12 54,12 Z"
+        android:fillColor="#090A0E"/>
+
+    <!-- Glowing Pink Heart icon in background of the matching zone -->
+    <path
+        android:pathData="M54,26 C46,14 26,14 18.5,24.5 C11,35 24,54.5 54,77 C84,54.5 97,35 89.5,24.5 C82,14 62,14 54,26 Z"
+        android:strokeWidth="3"
+        android:strokeColor="#FF1493"
+        android:fillColor="#15FF1493">
+        <gradient
+            android:startX="18"
+            android:startY="14"
+            android:endX="90"
+            android:endY="77"
+            android:startColor="#FDA4AF"
+            android:endColor="#DB2777"
+            android:type="linear" />
+    </path>
+
+    <!-- Stylized U and k calligraphy ligature stroke with vibrant colors -->
+    <path
+        android:pathData="M34,40 L34,55 C34,65 50,65 50,55 L50,23"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round">
         <gradient
-            android:startX="32"
-            android:startY="26"
-            android:endX="48"
-            android:endY="68"
-            android:startColor="#FDA4AF"
+            android:startX="34"
+            android:startY="23"
+            android:endX="50"
+            android:endY="65"
+            android:startColor="#F472B6"
+            android:endColor="#00F0FF"
+            android:type="linear" />
+    </path>
+
+    <path
+        android:pathData="M50,45 C58,37 66,39 66,47 C66,51 60,53 50,53"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <gradient
+            android:startX="50"
+            android:startY="37"
+            android:endX="66"
+            android:endY="53"
+            android:startColor="#00F0FF"
             android:endColor="#EC4899"
             android:type="linear" />
     </path>
 
     <path
-        android:pathData="M48,48 C56,40 64,42 64,50 C64,54 58,56 48,56"
-        android:strokeWidth="7.5"
+        android:pathData="M50,53 L66,65"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round">
         <gradient
-            android:startX="48"
-            android:startY="40"
-            android:endX="64"
-            android:endY="56"
-            android:startColor="#FDA4AF"
-            android:endColor="#EC4899"
-            android:type="linear" />
-    </path>
-
-    <path
-        android:pathData="M48,56 L64,68"
-        android:strokeWidth="7.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round">
-        <gradient
-            android:startX="48"
-            android:startY="56"
-            android:endX="64"
-            android:endY="68"
+            android:startX="50"
+            android:startY="53"
+            android:endX="66"
+            android:endY="65"
             android:startColor="#EC4899"
-            android:endColor="#BE185D"
+            android:endColor="#FF00FF"
             android:type="linear" />
     </path>
 </vector>

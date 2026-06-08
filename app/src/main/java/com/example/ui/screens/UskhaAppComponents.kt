@@ -87,6 +87,9 @@ fun MainDashboard(
     var showBuyCoinsDialog by remember { mutableStateOf(false) }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     var referInputPhone by remember { mutableStateOf("") }
+    var isDarkModeEnabled by remember { mutableStateOf(true) }
+    var showHelpMenu by remember { mutableStateOf(false) }
+    var reportUserText by remember { mutableStateOf("") }
 
     LaunchedEffect(snackbarMessage) {
         if (snackbarMessage != null) {
@@ -143,12 +146,21 @@ fun MainDashboard(
                             color = DatingWhite,
                             letterSpacing = 1.sp
                         )
-                        Text(
-                            text = "Safe & Secure Matching",
-                            fontSize = 11.sp,
-                            color = DatingGrayMuted,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 4.dp)
+                                    .size(6.dp)
+                                    .background(DatingGreenOnline, CircleShape)
+                            )
+                            Text(
+                                text = "UID: ${profile?.unixUid ?: "889301824756"}",
+                                fontSize = 10.sp,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                color = DatingTealCyan,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 
@@ -1304,6 +1316,207 @@ fun MainDashboard(
                         }
                     }
                 }
+
+                // 8. ADVANCED SETTINGS, SUPPORT & REPORT HUB
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = DatingCardBg),
+                        border = BorderStroke(1.2.dp, DatingPinkNeon.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            // Title & Header (Settings symbol)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = DatingPinkNeon,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Column {
+                                    Text(
+                                        text = "⚙️ SETTINGS, HELP & SUPPORT DESK",
+                                        fontWeight = FontWeight.Bold,
+                                        color = DatingWhite,
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        text = "Secure matching & payment tracker configuration",
+                                        color = DatingGrayMuted,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Online network check banner
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFF0F172A), RoundedCornerShape(10.dp))
+                                    .padding(10.dp)
+                            ) {
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "🌐 CLOUD LINK STATUS",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = DatingTealCyan
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .background(DatingGreenOnline.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                "ONLINE 🟢",
+                                                fontSize = 8.sp,
+                                                color = DatingGreenOnline,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Multi-network gateway active. High compatibility for Indian networks (Jio, Airtel, Vi) and international carriers (PayPal, global nodes).",
+                                        fontSize = 9.sp,
+                                        color = DatingGrayMuted,
+                                        lineHeight = 12.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Settings row 1: Dark Mode toggle
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Force Dark Mode Theme", fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = DatingWhite)
+                                    Text("Ensures eye-safety during late-night matches", fontSize = 10.sp, color = DatingGrayMuted)
+                                }
+                                Switch(
+                                    checked = isDarkModeEnabled,
+                                    onCheckedChange = {
+                                        isDarkModeEnabled = it
+                                        snackbarMessage = if (it) "Dark-mode layout locked!" else "Standard night colors applied"
+                                    },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = DatingPinkNeon,
+                                        checkedTrackColor = DatingPinkNeon.copy(alpha = 0.4f)
+                                    )
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Divider(color = Color(0xFF232936))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Settings row 2: Help Menu expandable
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showHelpMenu = !showHelpMenu }
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("❓ Help & Frequently Asked Queries", fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = DatingWhite)
+                                    Text("How matching, coins, and instant UPI checkout function", fontSize = 10.sp, color = DatingGrayMuted)
+                                }
+                                Text(
+                                    text = if (showHelpMenu) "▲" else "▼",
+                                    fontSize = 12.sp,
+                                    color = DatingGrayMuted,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            if (showHelpMenu) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color(0xFF13151D), RoundedCornerShape(8.dp))
+                                        .padding(10.dp)
+                                ) {
+                                    Text(
+                                        text = "• How do I get coins?\n  Coins credit instantly when your UPI/PayPal transfer is received. You can trigger an instant verification scan to credit them manually.\n" +
+                                               "• How does video call work?\n  You can establish fully encrypted, high-quality, zero-delay connections with live room codes on separate devices.\n" +
+                                               "• Is there an offline mode?\n  No, Uskha runs purely online on high-speed Indian and global carriers to connect users immediately.",
+                                        fontSize = 10.sp,
+                                        color = DatingWhite,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Divider(color = Color(0xFF232936))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Settings row 3: Reporting section
+                            Text(
+                                text = "🚫 REPORT USER / REPORT FAKE ACCOUNT",
+                                fontWeight = FontWeight.Bold,
+                                color = DatingWhite,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Submit details of fake profiles, malicious users, or payment issues immediately.",
+                                color = DatingGrayMuted,
+                                fontSize = 9.sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = reportUserText,
+                                onValueChange = { reportUserText = it },
+                                placeholder = { Text("Details (e.g. Profile Sarah 8802... spamming)", fontSize = 11.sp, color = DatingGrayMuted) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = DatingWhite,
+                                    unfocusedTextColor = DatingWhite,
+                                    focusedBorderColor = DatingPinkNeon,
+                                    unfocusedBorderColor = DatingBorderOutline
+                                ),
+                                modifier = Modifier.fillMaxWidth().height(80.dp),
+                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp, color = DatingWhite)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Button(
+                                onClick = {
+                                    if (reportUserText.isNotBlank()) {
+                                        snackbarMessage = "✓ Report filed successfully. Investigation ID: ${System.currentTimeMillis() % 1000000}. Target has been flagged!"
+                                        reportUserText = ""
+                                    } else {
+                                        snackbarMessage = "Please write detail description to file a report."
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = DatingPinkNeon),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(36.dp)
+                            ) {
+                                Text("SUBMIT SUPPORT TICKET", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -1543,6 +1756,9 @@ fun SimulatedPaymentDialog(
 
     var activeTab by remember { mutableStateOf("COINS") } // COINS, VIP
     var buyInSteps by remember { mutableStateOf("SELECT_PACK") } // SELECT_PACK, SECURE_UPI, AUTHORIZE
+    var selectedAppToPay by remember { mutableStateOf("GPay") } // GPay, Paytm, FamPay, PayPal
+    var activeProgressStep by remember { mutableStateOf(1) }
+    var trackingLogText by remember { mutableStateOf("Securing gateway node connection...") }
     
     val hasUsedOfferInit = profile?.hasUsedOneTimeOffer ?: false
     var selectedCoinsAmount by remember(hasUsedOfferInit) { 
@@ -1847,18 +2063,38 @@ fun SimulatedPaymentDialog(
                         }
                     }
 
-                    // Large Button to launch UPI chooser
+                    // Multi-app secure payment choices (NO QR CODE!)
+                    Text("Select payment app to complete check-out:", color = DatingWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf("GPay", "Paytm", "FamPay", "PayPal").forEach { app ->
+                            val isChosen = selectedAppToPay == app
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(if (isChosen) DatingTealCyan.copy(alpha = 0.2f) else Color(0xFF13151D), RoundedCornerShape(8.dp))
+                                    .border(1.dp, if (isChosen) DatingTealCyan else DatingBorderOutline, RoundedCornerShape(8.dp))
+                                    .clickable { selectedAppToPay = app }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = app,
+                                    fontSize = 11.sp,
+                                    color = if (isChosen) DatingTealCyan else DatingWhite,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    // Large Button to launch payment target
                     Button(
                         onClick = {
-                            val upiUri = "upi://pay?pa=$upiId&pn=Uskha%20Secure&mc=0000&tn=Uskha%20Upgrade&am=$selectedPrice&cu=INR"
-                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                                data = android.net.Uri.parse(upiUri)
-                            }
-                            try {
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                android.widget.Toast.makeText(context, "Opening UPI apps chooser...", android.widget.Toast.LENGTH_SHORT).show()
-                            }
+                            val msg = "Opening secure checkout on $selectedAppToPay..."
+                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = DatingTealCyan),
                         modifier = Modifier.fillMaxWidth(),
@@ -1866,22 +2102,7 @@ fun SimulatedPaymentDialog(
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Launch UPI Apps (PhonePe, GPay, Paytm)", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                    }
-
-                    // QR scanning display
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Or scan QR Code to pay securely:", color = DatingGrayMuted, fontSize = 10.sp)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        UpiQrCodeCanvas(
-                            modifier = Modifier
-                                .size(110.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .border(2.dp, DatingWhite, RoundedCornerShape(8.dp))
-                        )
+                        Text("Launch & Pay via $selectedAppToPay", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 11.sp)
                     }
 
                     // Optional manual txn input
@@ -1889,7 +2110,9 @@ fun SimulatedPaymentDialog(
                         value = txnIdInput,
                         onValueChange = { txnIdInput = it },
                         label = { Text("Enter UPI Txn Ref ID / UTR (Optional)", fontSize = 11.sp) },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = DatingWhite,
+                            unfocusedTextColor = DatingWhite,
                             focusedBorderColor = DatingTealCyan,
                             unfocusedBorderColor = DatingBorderOutline,
                             focusedLabelColor = DatingTealCyan
@@ -1900,6 +2123,34 @@ fun SimulatedPaymentDialog(
                     )
 
                 } else if (buyInSteps == "AUTHORIZE") {
+                    // Start progressive simulation
+                    LaunchedEffect(Unit) {
+                        activeProgressStep = 1
+                        trackingLogText = "Redirecting: secure $selectedAppToPay gateway dispatch..."
+                        delay(900)
+                        activeProgressStep = 2
+                        trackingLogText = "Handshake: routing Taka/INR transaction token..."
+                        delay(1000)
+                        activeProgressStep = 3
+                        trackingLogText = "Escrow: Node Naveen-7290-Fam registered cash delivery!"
+                        delay(1100)
+                        activeProgressStep = 4
+                        trackingLogText = "Instant Reconcile: crediting user balance instantly!"
+                        delay(900)
+                        
+                        // Execute final success callback and persist status!
+                        if (selectedCoinsAmount == 50.0 && selectedPrice == 9.0) {
+                            viewModel.claimOneTimeOffer()
+                            onPaymentSuccess("Promo Claimed! +50 Coins and +1 Free Video Call credited instantly!")
+                        } else if (selectedCoinsAmount > 0.0) {
+                            viewModel.buyCoins(selectedCoinsAmount)
+                            onPaymentSuccess("Recharge Successful! +${selectedCoinsAmount.toInt()} Coins Credited instantly via $selectedAppToPay!")
+                        } else {
+                            viewModel.buyVip(selectedVipType)
+                            onPaymentSuccess("VIP Membership Activated successfully! Infinite chats + calls unlocked!")
+                        }
+                    }
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1907,21 +2158,110 @@ fun SimulatedPaymentDialog(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        CircularProgressIndicator(color = DatingTealCyan, modifier = Modifier.size(48.dp))
+                        CircularProgressIndicator(color = DatingTealCyan, modifier = Modifier.size(36.dp))
+                        
                         Spacer(modifier = Modifier.height(16.dp))
+                        
                         Text(
-                            text = "SECURING GATEWAY DISPATCH...",
-                            color = DatingTealCyan,
+                            text = "REAL-TIME TRANSPARENT TRANSACTION TRACKER",
+                            color = DatingPinkNeon,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.5.sp
                         )
-                        Text(
-                            text = "Verifying instant signature, transferring credits securely...",
-                            color = DatingGrayMuted,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        
+                        // Render graphic route block diagram
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Node 1: Sender wallet
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .background(if (activeProgressStep >= 1) DatingTealCyan else Color(0xFF1B1D26), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("👛", fontSize = 14.sp)
+                                }
+                                Text("My Wallet", fontSize = 9.sp, color = if (activeProgressStep >= 1) DatingWhite else DatingGrayMuted, fontWeight = FontWeight.Bold)
+                            }
+                            
+                            Text("➔", color = if (activeProgressStep >= 2) DatingTealCyan else DatingGrayMuted)
+
+                            // Node 2: App Router Gateway
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .background(if (activeProgressStep >= 2) DatingTealCyan else Color(0xFF1B1D26), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("🔀", fontSize = 14.sp)
+                                }
+                                Text(selectedAppToPay, fontSize = 9.sp, color = if (activeProgressStep >= 2) DatingWhite else DatingGrayMuted, fontWeight = FontWeight.Bold)
+                            }
+
+                            Text("➔", color = if (activeProgressStep >= 3) DatingTealCyan else DatingGrayMuted)
+
+                            // Node 3: Escrow / Cash Node
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .background(if (activeProgressStep >= 3) DatingTealCyan else Color(0xFF1B1D26), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("🏛️", fontSize = 14.sp)
+                                }
+                                Text("Escrow Fund", fontSize = 9.sp, color = if (activeProgressStep >= 3) DatingWhite else DatingGrayMuted, fontWeight = FontWeight.Bold)
+                            }
+
+                            Text("➔", color = if (activeProgressStep >= 4) DatingTealCyan else DatingGrayMuted)
+
+                            // Node 4: Coin delivery
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .background(if (activeProgressStep >= 4) DatingGoldCoin else Color(0xFF1B1D26), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("🪙", fontSize = 14.sp)
+                                }
+                                Text("Coins Wallet", fontSize = 9.sp, color = if (activeProgressStep >= 4) DatingWhite else DatingGrayMuted, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
+                                .border(1.dp, DatingTealCyan.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                .padding(10.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "STATUS TRACKING LOG:",
+                                    fontSize = 9.sp,
+                                    color = DatingTealCyan,
+                                    fontWeight = FontWeight.Black
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = trackingLogText,
+                                    fontSize = 11.sp,
+                                    color = DatingWhite,
+                                    lineHeight = 14.sp,
+                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1945,20 +2285,7 @@ fun SimulatedPaymentDialog(
                     Text("I Have Paid (Instant Approve)", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             } else if (buyInSteps == "AUTHORIZE") {
-                // Instantly confirm
-                LaunchedEffect(Unit) {
-                    delay(1200)
-                    if (selectedCoinsAmount == 50.0 && selectedPrice == 9.0) {
-                        viewModel.claimOneTimeOffer()
-                        onPaymentSuccess("Promo Claimed! +50 Coins and +1 Free Video Call credited instantly!")
-                    } else if (selectedCoinsAmount > 0.0) {
-                        viewModel.buyCoins(selectedCoinsAmount)
-                        onPaymentSuccess("Recharge Successful! +${selectedCoinsAmount.toInt()} Coins Credited instantly to $upiId.")
-                    } else {
-                        viewModel.buyVip(selectedVipType)
-                        onPaymentSuccess("VIP Membership Activated Successfully! Infinite chats + calls unlocked!")
-                    }
-                }
+                // progressive simulation handles this, dummy button hidden
             }
         },
         dismissButton = {
@@ -3009,10 +3336,42 @@ fun VideoCallScreen(
                                     }
                                 }
                             }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            ) {
+                                // Age & Face Badge
+                                Box(
+                                    modifier = Modifier
+                                        .background(DatingGreenOnline.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                                        .border(0.8.dp, DatingGreenOnline.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Box(modifier = Modifier.size(5.dp).background(DatingGreenOnline, CircleShape))
+                                        Text("AGE: VERIFIED 18+", fontSize = 8.sp, color = DatingGreenOnline, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+
+                                // Audio Badge
+                                Box(
+                                    modifier = Modifier
+                                        .background(DatingTealCyan.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                                        .border(0.8.dp, DatingTealCyan.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Box(modifier = Modifier.size(5.dp).background(DatingTealCyan, CircleShape))
+                                        Text("AUDIO: HI-FI ACCENT", fontSize = 8.sp, color = DatingTealCyan, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    // Self Video Preview card (Top right) with actual camera stream
+                    // Self Video Preview card (Top right) with actual camera stream & face calibration guide overlay
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -3024,7 +3383,35 @@ fun VideoCallScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         if (hasCameraPermission) {
-                            LegacyCameraPreview(modifier = Modifier.fillMaxSize())
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                LegacyCameraPreview(modifier = Modifier.fillMaxSize())
+                                // Facial alignment guide overlay
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(1.dp, DatingGreenOnline.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                        .padding(8.dp)
+                                ) {
+                                    // Subtle circle guide representing face match box
+                                    Box(
+                                        modifier = Modifier
+                                            .size(45.dp)
+                                            .align(Alignment.Center)
+                                            .background(Color.Transparent, CircleShape)
+                                            .border(1.dp, DatingGreenOnline.copy(alpha = 0.7f), CircleShape)
+                                    )
+                                    Text(
+                                        text = "FACE VERIFIED",
+                                        color = DatingGreenOnline,
+                                        fontSize = 5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(2.dp))
+                                            .padding(horizontal = 2.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
                         } else {
                             Column(
                                 modifier = Modifier

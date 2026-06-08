@@ -10,6 +10,7 @@ data class UserProfile(
     @PrimaryKey val id: String = "current_user",
     val name: String = "Alex Mercer",
     val email: String = "alex@uskha.com",
+    val unixUid: String = "880193485721",
     val balance: Double = 35.00, // Starting free coins for 35 coins
     val currency: String = "USK",
     val activeBankName: String = "Uskha Federal Bank",

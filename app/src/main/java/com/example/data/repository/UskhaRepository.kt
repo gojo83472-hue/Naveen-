@@ -25,23 +25,25 @@ class UskhaRepository(private val dao: UskhaDao) {
     suspend fun createInitialDataIfEmpty() {
         val currentProfile = dao.getProfileDirect()
         if (currentProfile == null) {
-            dao.insertProfile(UserProfile(name = "Alex Mercer", email = "alex@uskha.com", balance = 35.00))
+            dao.insertProfile(UserProfile(name = "Alex Mercer", email = "alex@uskha.com", unixUid = "889301824756", balance = 35.00))
         }
 
         val currentFriends = dao.getFriendsFlow().first()
         if (currentFriends.isEmpty()) {
             val initialFriends = listOf(
-                Friend("f1", "Sarah Connor", "Safety Specialist & Fitness Coach", 120.0, 1, true),
-                Friend("f2", "Marcus Wright", "Tech Innovator & Cybersecurity consultant", 45.0, 2, false),
-                Friend("f3", "Kyle Reese", "History Buff & Strategic Planner", 90.0, 3, true),
-                Friend("f4", "John Connor", "Finance Enthusiast & Leader", 310.0, 4, true),
-                Friend("f5", "Dani Ramos", "Creative UX Specialist & Designer", 85.0, 5, false)
+                Friend("880594382012", "Sarah Connor", "Safety Specialist & Fitness Coach", 120.0, 1, true),
+                Friend("880193482756", "Anup (Verified Match)", "Clear Voice & Face Verified Specialist", 150.0, 2, true),
+                Friend("880918342205", "Marcus Wright", "Tech Innovator & Cybersecurity consultant", 45.0, 3, false),
+                Friend("880293847561", "Kyle Reese", "History Buff & Strategic Planner", 90.0, 4, true),
+                Friend("880491837562", "John Connor", "Finance Enthusiast & Leader", 310.0, 5, true),
+                Friend("880793485721", "Dani Ramos", "Creative UX Specialist & Designer", 85.0, 6, false)
             )
             dao.insertFriends(initialFriends)
 
             // Insert a few transactions for initial logs
-            dao.insertTransaction(Transaction(friendId = "f1", friendName = "Sarah Connor", amount = 3.0, isSending = true, note = "Secure Text Session Fee"))
-            dao.insertTransaction(Transaction(friendId = "f3", friendName = "Kyle Reese", amount = 20.0, isSending = true, note = "Video Match Setup Fee"))
+            dao.insertTransaction(Transaction(friendId = "880594382012", friendName = "Sarah Connor", amount = 3.0, isSending = true, note = "Secure Text Session Fee"))
+            dao.insertTransaction(Transaction(friendId = "880293847561", friendName = "Kyle Reese", amount = 20.0, isSending = true, note = "Video Match Setup Fee"))
+            dao.insertTransaction(Transaction(friendId = "880193482756", friendName = "Anup (Verified Match)", amount = 25.0, isSending = true, note = "Perfect Audio Match Calibration Fee"))
         }
     }
 
@@ -185,7 +187,7 @@ class UskhaRepository(private val dao: UskhaDao) {
     }
 
     suspend fun addNewFriend(name: String, bio: String): Friend {
-        val friendId = "f_" + System.currentTimeMillis()
+        val friendId = (880000000000L + (Math.random() * 9999999999L).toLong()).toString()
         val friend = Friend(
             id = friendId,
             name = name,
